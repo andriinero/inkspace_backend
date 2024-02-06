@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const CommentSchema = new Schema({
+  post: { type: Schema.Types.ObjectId, required: true, ref: 'post' },
   email: { type: String, required: true, minLength: 3, maxLength: 100 },
   title: { type: String, required: true, minLength: 3, maxLength: 100 },
   body: { type: String, required: true, minLength: 10, maxLength: 280 },

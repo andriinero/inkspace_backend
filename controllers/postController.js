@@ -60,9 +60,9 @@ exports.post_post = [
 
       const post = new Post(postDetail);
 
-      await post.save();
+      const newPost = await post.save();
 
-      res.sendStatus(200);
+      res.json(newPost);
     }
   }),
 ];
@@ -76,13 +76,13 @@ exports.post_put = [
     })
     .escape(),
   body('title', 'Title must have correct length')
-    .trim()
     .optional()
+    .trim()
     .isLength({ min: 3, max: 100 })
     .escape(),
   body('body', 'Post body must have correct length')
-    .trim()
     .optional()
+    .trim()
     .isLength({ min: 3, max: 100 })
     .escape(),
   asyncHandler(async (req, res, next) => {
