@@ -11,17 +11,17 @@ exports.posts_get = asyncHandler(async (req, res, next) => {
 });
 
 exports.post_get = [
-  param('postid')
+  param('postid', 'Post id must be valid')
     .trim()
-    .custom(async (value) => {
-      let valid = mongoose.Types.ObjectId.isValid(value);
-      if (!valid) throw new Error('Post id must be valid');
+    .custom((value) => {
+      return mongoose.Types.ObjectId.isValid(value);
     })
     .escape(),
   asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
+      res.statusCode = 400;
       res.json({ errors: errors.array() });
     } else {
       const post = await Post.findById(req.params.postid);
@@ -48,7 +48,7 @@ exports.post_post = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400);
+      res.statusCode = 400;
       res.json({ errors: errors.array() });
     } else {
       const postDetail = {
@@ -68,11 +68,10 @@ exports.post_post = [
 ];
 
 exports.post_put = [
-  param('postid')
+  param('postid', 'Post id must be valid')
     .trim()
-    .custom(async (value) => {
-      let valid = mongoose.Types.ObjectId.isValid(value);
-      if (!valid) throw new Error('Post id must be valid');
+    .custom((value) => {
+      return mongoose.Types.ObjectId.isValid(value);
     })
     .escape(),
   body('title', 'Title must have correct length')
@@ -89,6 +88,7 @@ exports.post_put = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
+      res.statusCode = 400;
       res.json({ errors: errors.array() });
     } else {
       const post = await Post.findById(req.params.postid).exec();
@@ -113,17 +113,17 @@ exports.post_put = [
 ];
 
 exports.post_delete = [
-  param('postid')
+  param('postid', 'Post id must be valid')
     .trim()
-    .custom(async (value) => {
-      let valid = mongoose.Types.ObjectId.isValid(value);
-      if (!valid) throw new Error('Post id must be valid');
+    .custom((value) => {
+      return mongoose.Types.ObjectId.isValid(value);
     })
     .escape(),
   asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
+      res.statusCode = 400;
       res.json({ errors: errors.array() });
     } else {
       const deletedPost = await Post.findByIdAndDelete(req.params.postid);

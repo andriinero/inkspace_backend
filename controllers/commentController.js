@@ -3,7 +3,7 @@ const asyncHandler = require('express-async-handler');
 const mongoose = require('mongoose');
 
 const Comment = require('../models/comment');
-const post = require('../models/post');
+const Post = require('../models/post');
 
 exports.comments_get = [
   param('postid', 'Post id must be valid')
@@ -16,6 +16,7 @@ exports.comments_get = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
+      res.statusCode = 400;
       res.json({ errors: errors.array() });
     } else {
       const allCommentsByPost = await Comment.find({ post: req.params.postid }).exec();
@@ -37,7 +38,7 @@ exports.comment_get = [
       return mongoose.Types.ObjectId.isValid(value);
     })
     .escape(),
-  param('commentid', 'Post id must be valid')
+  param('commentid', 'Comment id must be valid')
     .trim()
     .custom((value) => {
       return mongoose.Types.ObjectId.isValid(value);
@@ -47,6 +48,7 @@ exports.comment_get = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
+      res.statusCode = 400;
       res.json({ errors: errors.array() });
     } else {
       const comment = await Comment.findOne({
@@ -70,16 +72,10 @@ exports.comment_post = [
       return mongoose.Types.ObjectId.isValid(value);
     })
     .escape(),
-  param('commentid')
-    .trim()
-    .custom((value) => {
-      return mongoose.Types.ObjectId.isValid(value);
-    })
-    .escape(),
   body('email', 'Email must have correct format')
     .trim()
     .isEmail()
-    .isLength({ min: 3, max: 10 })
+    .isLength({ min: 3, max: 100 })
     .escape(),
   body('title', 'Title must have correct length')
     .trim()
@@ -93,6 +89,7 @@ exports.comment_post = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
+      res.statusCode = 400;
       res.json({ errors: errors.array() });
     } else {
       const post = await Post.findById(req.params.postid).exec();
@@ -108,11 +105,14 @@ exports.comment_post = [
           date: new Date(),
         };
 
-        const comment = new Comment(commentDetail);
+        const newComment = new Comment(commentDetail);
 
-        const newComment = await comment.save();
+        const savedComment = await newComment.save();
 
-        res.json(newComment);
+        await post.comments.push(savedComment);
+        await post.save();
+
+        res.json(savedComment);
       }
     }
   }),
@@ -125,7 +125,7 @@ exports.comment_put = [
       return mongoose.Types.ObjectId.isValid(value);
     })
     .escape(),
-  param('commentid')
+  param('commentid', 'Comment id must be valid')
     .trim()
     .custom((value) => {
       return mongoose.Types.ObjectId.isValid(value);
@@ -151,6 +151,7 @@ exports.comment_put = [
     const errors = validationResult(req);
 
     if (!errors.array()) {
+      res.statusCode = 400;
       res.json({ errors: errors.array() });
     } else {
       const comment = await Comment.findOne({
@@ -162,21 +163,21 @@ exports.comment_put = [
         res.sendStatus(404);
       } else {
         const commentDetail = {
-          ...post,
+          ...Post,
           _id: req.params.commentid,
           email: req.body.email || comment.email,
           title: req.body.title || comment.title,
           body: req.body.body || comment.body,
         };
 
-        const comment = new Comment(commentDetail);
+        const newComment = new Comment(commentDetail);
 
         const updatedComment = await Comment.findOneAndUpdate(
           {
             _id: req.params.commentid,
             post: req.params.postid,
           },
-          commentDetail,
+          newComment,
           { new: true }
         );
 
@@ -193,7 +194,7 @@ exports.comment_delete = [
       return mongoose.Types.ObjectId.isValid(value);
     })
     .escape(),
-  param('commentid')
+  param('commentid', 'Comment id must be valid')
     .trim()
     .custom((value) => {
       return mongoose.Types.ObjectId.isValid(value);
@@ -203,6 +204,7 @@ exports.comment_delete = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
+      res.statusCode = 400;
       res.json({ errors: errors.array() });
     } else {
       const comment = await Comment.findOne({
