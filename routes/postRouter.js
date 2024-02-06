@@ -3,15 +3,15 @@ const router = express.Router();
 
 const postController = require('../controllers/postController');
 
-router.get('/posts', postController.posts_get);
+router.get('/', postController.posts_get);
 
-router.get('/posts/:postid', postController.post_get);
+router.get('/:postid', postController.post_get);
 
-router.post('/posts', postController.post_post);
+router.post('/', postController.post_post);
 
-router.put('/posts/:postid', postController.post_put);
+router.put('/:postid', postController.post_put);
 
-router.delete('/posts/:postid', postController.post_delete);
+router.delete('/:postid', postController.post_delete);
 
 
 module.exports = router;
