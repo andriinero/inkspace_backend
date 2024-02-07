@@ -2,10 +2,11 @@ const asyncHandler = require('express-async-handler');
 const { body, param, validationResult } = require('express-validator');
 
 const Post = require('../models/post');
+const User = require('../models/user');
 const mongoose = require('mongoose');
 
 exports.posts_get = asyncHandler(async (req, res, next) => {
-  const allPosts = await Post.find({}).exec();
+  const allPosts = await Post.find().populate('author', 'username email').exec();
 
   res.json(allPosts);
 });
@@ -24,7 +25,7 @@ exports.post_get = [
       res.statusCode = 400;
       res.json({ errors: errors.array() });
     } else {
-      const post = await Post.findById(req.params.postid);
+      const post = await Post.findById(req.params.postid).projection();
 
       if (!post) {
         res.sendStatus(404);
@@ -98,7 +99,9 @@ exports.post_put = [
 
       const updatedPost = await Post.findByIdAndUpdate(req.params.postid, postDetail, {
         new: true,
-      });
+      })
+        .populate('author', 'username email')
+        .exec();
 
       if (!updatedPost) {
         res.sendStatus(404);

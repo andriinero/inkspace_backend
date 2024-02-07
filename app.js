@@ -3,6 +3,7 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const mongoose = require('mongoose');
+const cors = require('cors')
 
 const indexRouter = require('./routes/index');
 const postRouter = require('./routes/postRouter');
@@ -18,6 +19,7 @@ const main = async () => {
 };
 main().catch((err) => console.log(err.message));
 
+app.use(cors());
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
