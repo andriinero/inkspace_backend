@@ -52,6 +52,7 @@ exports.post_post = [
       res.json({ errors: errors.array() });
     } else {
       const postDetail = {
+        // hardcoded: auth not implemented
         author: '65c20bf87454d893cab48638',
         title: req.body.title,
         body: req.body.body,
@@ -59,7 +60,6 @@ exports.post_post = [
       };
 
       const post = new Post(postDetail);
-
       const newPost = await post.save();
 
       res.json(newPost);
@@ -91,21 +91,18 @@ exports.post_put = [
       res.statusCode = 400;
       res.json({ errors: errors.array() });
     } else {
-      const post = await Post.findById(req.params.postid).exec();
+      const postDetail = {
+        title: req.body.title,
+        body: req.body.body,
+      };
 
-      if (!post) {
+      const updatedPost = await Post.findByIdAndUpdate(req.params.postid, postDetail, {
+        new: true,
+      });
+
+      if (!updatedPost) {
         res.sendStatus(404);
       } else {
-        const newPost = {
-          ...post,
-          _id: req.params.id,
-          title: req.body.title || post.title,
-          body: req.body.body || post.body,
-        };
-
-        const updatedPost = await Post.findByIdAndUpdate(req.params.postid, newPost, {
-          new: true,
-        });
         res.json(updatedPost);
       }
     }
