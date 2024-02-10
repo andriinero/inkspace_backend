@@ -75,16 +75,11 @@ exports.comment_post = [
   body('email', 'Email must have correct format')
     .trim()
     .isEmail()
-    .isLength({ min: 3, max: 100 })
-    .escape(),
-  body('title', 'Title must have correct length')
-    .trim()
-    .isLength({ min: 3, max: 100 })
-    .escape(),
+    .isLength({ min: 3, max: 100 }),
+  body('title', 'Title must have correct length').trim().isLength({ min: 3, max: 100 }),
   body('body', 'Comment body must have correct length')
     .trim()
-    .isLength({ min: 10, maxLength: 280 })
-    .escape(),
+    .isLength({ min: 10, maxLength: 280 }),
   asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
 
@@ -134,18 +129,15 @@ exports.comment_put = [
     .optional()
     .trim()
     .isEmail()
-    .isLength({ min: 3, max: 10 })
-    .escape(),
+    .isLength({ min: 3, max: 10 }),
   body('title', 'Title must have correct length')
     .optional()
     .trim()
-    .isLength({ min: 3, max: 100 })
-    .escape(),
+    .isLength({ min: 3, max: 100 }),
   body('body', 'Comment body must have correct length')
     .optional()
     .trim()
-    .isLength({ min: 10, maxLength: 280 })
-    .escape(),
+    .isLength({ min: 10, maxLength: 280 }),
   asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
 

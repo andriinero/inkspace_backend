@@ -2,6 +2,7 @@ const asyncHandler = require('express-async-handler');
 const { body, param, validationResult } = require('express-validator');
 
 const Post = require('../models/post');
+// User model is required by mongoose
 const User = require('../models/user');
 const mongoose = require('mongoose');
 
@@ -37,14 +38,10 @@ exports.post_get = [
 ];
 
 exports.post_post = [
-  body('title', 'Title must have correct length')
-    .trim()
-    .isLength({ min: 3, max: 100 })
-    .escape(),
+  body('title', 'Title must have correct length').trim().isLength({ min: 3, max: 100 }),
   body('body', 'Post body must have correct length')
     .trim()
-    .isLength({ min: 3, max: 500 })
-    .escape(),
+    .isLength({ min: 3, max: 500 }),
   asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
 
@@ -78,13 +75,11 @@ exports.post_put = [
   body('title', 'Title must have correct length')
     .optional()
     .trim()
-    .isLength({ min: 3, max: 100 })
-    .escape(),
+    .isLength({ min: 3, max: 100 }),
   body('body', 'Post body must have correct length')
     .optional()
     .trim()
-    .isLength({ min: 3, max: 100 })
-    .escape(),
+    .isLength({ min: 3, max: 100 }),
   asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
 
