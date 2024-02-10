@@ -5,7 +5,13 @@ const UserSchema = new Schema({
   username: { type: String, required: true, minLength: 3, maxLength: 100 },
   password: { type: String, required: true, minLength: 8 },
   email: { type: String, minLength: 3, maxLength: 100 },
-  role: { type: String, required: true, enum: ['user', 'admin'] },
+  role: { type: String, required: true, enum: ['user', 'admin'], default: 'user' },
+  sign_up_date: { type: Date, required: true, default: Date.now },
+  user_posts: [{ type: Schema.Types.ObjectId, required: true, ref: 'Post' }],
+  post_bookmarks: [{ type: Schema.Types.ObjectId, required: true, ref: 'Post' }],
+  ignored_posts: [{ type: Schema.Types.ObjectId, required: true, ref: 'Post' }],
+  ignored_topics: [{ type: Schema.Types.ObjectId, required: true, ref: 'Topic' }],
+  followed_users: [{ type: Schema.Types.ObjectId, required: true, ref: 'User' }],
 });
 
 UserSchema.virtual('url').get(function () {
