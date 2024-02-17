@@ -34,10 +34,10 @@ async function main() {
   mongoose.connection.close();
 }
 
-async function userCreate(index, username, password, email, role) {
+async function userCreate(index, username, password, email, role, bio = undefined) {
   const hashedPassword = await bcrypt.hash(password, +process.env.SALT_VALUE);
 
-  const userDetail = { username, password: hashedPassword, email, role };
+  const userDetail = { username, password: hashedPassword, email, role, bio };
 
   const user = new User(userDetail);
   await user.save();
@@ -98,7 +98,32 @@ async function commentCreate(index, post, email, title, body) {
 
 async function createUsers() {
   console.log('Adding users...');
-  await Promise.all([userCreate(0, 'user1', 'strongpass1', 'example@gmail.com', 'user')]);
+  await Promise.all([
+    userCreate(
+      0,
+      'CoolGuyNerd',
+      'strongpass1',
+      'example1@gmail.com',
+      'user',
+      'Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et.'
+    ),
+    userCreate(
+      1,
+      'CoolGirlNerd',
+      'strongpass1',
+      'example2@gmail.com',
+      'user',
+      'Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et.'
+    ),
+    userCreate(
+      2,
+      'JustANerd',
+      'strongpass1',
+      'example3@gmail.com',
+      'user',
+      'Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et.'
+    ),
+  ]);
 }
 
 async function createTopics() {
@@ -118,10 +143,31 @@ async function createPosts() {
     ),
     postCreate(
       1,
-      users[0],
+      users[1],
       'Second post title',
       'Hardly sweet yet stone local flight save day carry pony outer hollow log myself brave fort fine poetry wear pound massage plain girl good',
       topics[1]
+    ),
+    postCreate(
+      2,
+      users[1],
+      'Third post title',
+      'Every circus unusual rocky corn hour hungry cutting increase mission greatly source perfectly broke now band sand save dance firm ten avoid curious underline',
+      topics[1]
+    ),
+    postCreate(
+      3,
+      users[2],
+      'Fourth post title',
+      'Specific nodded lying whether egg harbor although lost pile push pond city please equal among beyond voyage pilot floor character person studying vapor properly',
+      topics[0]
+    ),
+    postCreate(
+      4,
+      users[2],
+      'Fifth post title',
+      'Noted getting object has aside nobody court magic needs golden bee using look opportunity storm balance realize immediately dirty due below suggest lie foreign',
+      topics[0]
     ),
   ]);
 }
