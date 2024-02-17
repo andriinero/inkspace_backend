@@ -3,10 +3,11 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const mongoose = require('mongoose');
-const cors = require('cors')
+const cors = require('cors');
 
 const indexRouter = require('./routes/index');
 const postRouter = require('./routes/postRouter');
+const userRouter = require('./routes/userRouter');
 
 require('dotenv').config();
 
@@ -28,5 +29,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
 app.use('/api/posts', postRouter);
+app.use('/api/users', userRouter);
 
 module.exports = app;

@@ -2,12 +2,16 @@ const asyncHandler = require('express-async-handler');
 const { body, param, validationResult } = require('express-validator');
 
 const Post = require('../models/post');
-// User model is required by mongoose
 const User = require('../models/user');
+const Topic = require('../models/topic');
+
 const mongoose = require('mongoose');
 
 exports.posts_get = asyncHandler(async (req, res, next) => {
-  const allPosts = await Post.find().populate('author', 'username email').exec();
+  const allPosts = await Post.find()
+    .populate('author', 'username email')
+    .populate('topic')
+    .exec();
 
   res.json(allPosts);
 });
