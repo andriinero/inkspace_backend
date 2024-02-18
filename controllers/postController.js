@@ -65,8 +65,7 @@ exports.post_get = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.statusCode = 400;
-      res.json({ errors: errors.array() });
+      res.status(400).json({ errors: errors.array() });
     } else {
       const post = await Post.findById(req.params.postid).projection();
 
@@ -88,8 +87,7 @@ exports.post_post = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.statusCode = 400;
-      res.json({ errors: errors.array() });
+      res.status(400).json({ errors: errors.array() });
     } else {
       const postDetail = {
         // hardcoded: auth not implemented
@@ -126,8 +124,7 @@ exports.post_put = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.statusCode = 400;
-      res.json({ errors: errors.array() });
+      res.status(400).json({ errors: errors.array() });
     } else {
       const postDetail = {
         title: req.body.title,
@@ -160,8 +157,7 @@ exports.post_delete = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.statusCode = 400;
-      res.json({ errors: errors.array() });
+      res.status(400).json({ errors: errors.array() });
     } else {
       const deletedPost = await Post.findByIdAndDelete(req.params.postid);
 
