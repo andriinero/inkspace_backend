@@ -5,6 +5,8 @@ const mongoose = require('mongoose');
 const Comment = require('../models/comment');
 const Post = require('../models/post');
 
+require('dotenv').config();
+
 exports.comments_get = [
   param('postid', 'Post id must be valid')
     .trim()
@@ -13,7 +15,7 @@ exports.comments_get = [
     })
     .escape(),
   query('limit', 'Limit query must have valid format')
-    .default(process.env.MAX_DOCS_PER_FETCH)
+    .default(+process.env.MAX_DOCS_PER_FETCH)
     .trim()
     .isInt()
     .customSanitizer((value) => {

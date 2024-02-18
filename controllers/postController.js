@@ -7,9 +7,11 @@ const Topic = require('../models/topic');
 
 const mongoose = require('mongoose');
 
+require('dotenv').config();
+
 exports.posts_get = [
   query('limit', 'Limit query must have valid format')
-    .default(process.env.MAX_DOCS_PER_FETCH)
+    .default(+process.env.MAX_DOCS_PER_FETCH)
     .trim()
     .isInt()
     .customSanitizer((value) => {

@@ -3,9 +3,11 @@ const { body, query, validationResult } = require('express-validator');
 
 const User = require('../models/user');
 
+require('dotenv').config();
+
 exports.authors_get = [
   query('limit', 'Limit query must have valid format')
-    .default(process.env.MAX_DOCS_PER_FETCH)
+    .default(+process.env.MAX_DOCS_PER_FETCH)
     .trim()
     .isInt()
     .customSanitizer((value) => {
@@ -39,7 +41,7 @@ exports.authors_get = [
       const { limit, page } = req.query;
 
       const lastUsers = await User.find({}, 'username bio')
-        .skip(page * process.env.DOCS_PER_FETCH)
+        .skip(page * process.env.MAX_DOCS_PER_FETCH)
         .limit(limit)
         .exec();
 
