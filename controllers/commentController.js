@@ -1,4 +1,4 @@
-const { body, param, validationResult } = require('express-validator');
+const { body, param, query, validationResult } = require('express-validator');
 const asyncHandler = require('express-async-handler');
 const mongoose = require('mongoose');
 
@@ -12,14 +12,52 @@ exports.comments_get = [
       return mongoose.Types.ObjectId.isValid(value);
     })
     .escape(),
+  query('limit', 'Limit query must have valid format')
+    .default(20)
+    .trim()
+    .isInt()
+    .customSanitizer((value) => {
+      if (value < 0 || value > 20) {
+        return 0;
+      } else {
+        return value;
+      }
+    })
+    .escape(),
+  query('page', 'Page query must have valid format')
+    .default(1)
+    .trim()
+    .isInt()
+    .customSanitizer(async (value, { req }) => {
+      const errors = validationResult(req);
+
+      if (!errors.isEmpty()) {
+        throw new Error('An error has occurred during sanitization');
+      } else {
+        const docCount = await Comment.find({ post: req.params.postid })
+          .countDocuments()
+          .exec();
+
+        if (value < 0 || value > Math.ceil(docCount / process.env.MAX_DOCS_PER_FETCH)) {
+          return 0;
+        } else {
+          return --value;
+        }
+      }
+    })
+    .escape(),
   asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.statusCode = 400;
-      res.json({ errors: errors.array() });
+      res.status(400).json({ errors: errors.array() });
     } else {
-      const allCommentsByPost = await Comment.find({ post: req.params.postid }).exec();
+      const { limit, page } = req.query;
+
+      const allCommentsByPost = await Comment.find({ post: req.params.postid })
+        .skip(page * process.env.MAX_DOCS_PER_FETCH)
+        .limit(limit)
+        .exec();
 
       if (allCommentsByPost === undefined) {
         res.sendStatus(404);
@@ -48,8 +86,7 @@ exports.comment_get = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.statusCode = 400;
-      res.json({ errors: errors.array() });
+      res.status(400).json({ errors: errors.array() });
     } else {
       const comment = await Comment.findOne({
         _id: req.params.commentid,
@@ -84,8 +121,7 @@ exports.comment_post = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.statusCode = 400;
-      res.json({ errors: errors.array() });
+      res.status(400).json({ errors: errors.array() });
     } else {
       const post = await Post.findById(req.params.postid).exec();
 
@@ -142,8 +178,7 @@ exports.comment_put = [
     const errors = validationResult(req);
 
     if (!errors.array()) {
-      res.statusCode = 400;
-      res.json({ errors: errors.array() });
+      res.status(400).json({ errors: errors.array() });
     } else {
       const commentDetail = {
         email: req.body.email,
@@ -186,8 +221,7 @@ exports.comment_delete = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.statusCode = 400;
-      res.json({ errors: errors.array() });
+      res.status(400).json({ errors: errors.array() });
     } else {
       const deletedComment = await Comment.findByIdAndDelete({
         _id: req.params.commentid,

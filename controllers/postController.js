@@ -1,5 +1,5 @@
 const asyncHandler = require('express-async-handler');
-const { body, param, validationResult } = require('express-validator');
+const { body, param, query, validationResult } = require('express-validator');
 
 const Post = require('../models/post');
 const User = require('../models/user');
@@ -7,14 +7,52 @@ const Topic = require('../models/topic');
 
 const mongoose = require('mongoose');
 
-exports.posts_get = asyncHandler(async (req, res, next) => {
-  const allPosts = await Post.find()
-    .populate('author', 'username email')
-    .populate('topic')
-    .exec();
+exports.posts_get = [
+  query('limit', 'Limit query must have valid format')
+    .default(20)
+    .trim()
+    .isInt()
+    .customSanitizer((value) => {
+      if (value < 0 || value > 20) {
+        return 0;
+      } else {
+        return value;
+      }
+    })
+    .escape(),
+  query('page', 'Page query must have valid format')
+    .default(1)
+    .trim()
+    .isInt()
+    .customSanitizer(async (value) => {
+      const docCount = await Post.find().countDocuments().exec();
 
-  res.json(allPosts);
-});
+      if (value < 0 || value > Math.ceil(docCount / process.env.MAX_DOCS_PER_FETCH)) {
+        return 0;
+      } else {
+        return --value;
+      }
+    })
+    .escape(),
+  asyncHandler(async (req, res, next) => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      res.status(400).json(errors.array());
+    } else {
+      const { page, limit } = req.query;
+
+      const allPosts = await Post.find({})
+        .skip(page * process.env.MAX_DOCS_PER_FETCH)
+        .limit(limit)
+        .populate('author', 'username email')
+        .populate('topic', 'name')
+        .exec();
+
+      res.json(allPosts);
+    }
+  }),
+];
 
 exports.post_get = [
   param('postid', 'Post id must be valid')

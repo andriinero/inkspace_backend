@@ -5,18 +5,25 @@ const User = require('../models/user');
 
 exports.authors_get = [
   query('limit', 'Limit query must have valid format')
-    .optional()
+    .default(20)
     .trim()
-    .isInt({ min: 1, max: 20 })
+    .isInt()
+    .customSanitizer((value) => {
+      if (value < 0 || value > 20) {
+        return 0;
+      } else {
+        return value;
+      }
+    })
     .escape(),
   query('page', 'Page query must have valid format')
-    .optional()
+    .default(1)
     .trim()
-    .isInt({ min: 1 })
+    .isInt()
     .customSanitizer(async (value) => {
       const docCount = await User.find().countDocuments().exec();
 
-      if (value > Math.ceil(docCount / process.env.MAX_DOCS_PER_FETCH)) {
+      if (value < 0 || value > Math.ceil(docCount / process.env.MAX_DOCS_PER_FETCH)) {
         return 0;
       } else {
         return --value;
@@ -27,7 +34,7 @@ exports.authors_get = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json(errors);
+      res.status(400).json(errors.array());
     } else {
       const { limit, page } = req.query;
 
