@@ -13,7 +13,7 @@ exports.comments_get = [
     })
     .escape(),
   query('limit', 'Limit query must have valid format')
-    .default(20)
+    .default(process.env.MAX_DOCS_PER_FETCH)
     .trim()
     .isInt()
     .customSanitizer((value) => {
@@ -34,9 +34,7 @@ exports.comments_get = [
       if (!errors.isEmpty()) {
         throw new Error('An error has occurred during sanitization');
       } else {
-        const docCount = await Comment.find({ post: req.params.postid })
-          .countDocuments()
-          .exec();
+        const docCount = await Comment.countDocuments({ post: req.params.postid }).exec();
 
         if (value < 0 || value > Math.ceil(docCount / process.env.MAX_DOCS_PER_FETCH)) {
           return 0;

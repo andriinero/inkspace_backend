@@ -5,7 +5,7 @@ const User = require('../models/user');
 
 exports.authors_get = [
   query('limit', 'Limit query must have valid format')
-    .default(20)
+    .default(process.env.MAX_DOCS_PER_FETCH)
     .trim()
     .isInt()
     .customSanitizer((value) => {
@@ -21,7 +21,7 @@ exports.authors_get = [
     .trim()
     .isInt()
     .customSanitizer(async (value) => {
-      const docCount = await User.find().countDocuments().exec();
+      const docCount = await User.countDocuments().exec();
 
       if (value < 0 || value > Math.ceil(docCount / process.env.MAX_DOCS_PER_FETCH)) {
         return 0;

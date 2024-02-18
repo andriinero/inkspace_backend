@@ -9,7 +9,7 @@ const mongoose = require('mongoose');
 
 exports.posts_get = [
   query('limit', 'Limit query must have valid format')
-    .default(20)
+    .default(process.env.MAX_DOCS_PER_FETCH)
     .trim()
     .isInt()
     .customSanitizer((value) => {
@@ -25,7 +25,7 @@ exports.posts_get = [
     .trim()
     .isInt()
     .customSanitizer(async (value) => {
-      const docCount = await Post.find().countDocuments().exec();
+      const docCount = await Post.countDocuments().exec();
 
       if (value < 0 || value > Math.ceil(docCount / process.env.MAX_DOCS_PER_FETCH)) {
         return 0;
@@ -67,7 +67,7 @@ exports.post_get = [
     if (!errors.isEmpty()) {
       res.status(400).json({ errors: errors.array() });
     } else {
-      const post = await Post.findById(req.params.postid).projection();
+      const post = await Post.findById(req.params.postid);
 
       if (!post) {
         res.sendStatus(404);
