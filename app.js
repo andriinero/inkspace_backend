@@ -7,7 +7,8 @@ const cors = require('cors');
 
 const indexRouter = require('./routes/index');
 const postRouter = require('./routes/postRouter');
-const authorsRouter = require('./routes/authorRouter');
+const authorRouter = require('./routes/authorRouter');
+const topicRouter = require('./routes/topicRouter');
 
 require('dotenv').config();
 
@@ -29,6 +30,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
 app.use('/api/posts', postRouter);
-app.use('/api/authors', authorsRouter);
+app.use('/api/authors', authorRouter);
+app.use('/api/topics', topicRouter);
 
 module.exports = app;

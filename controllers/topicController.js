@@ -1,11 +1,11 @@
 const asyncHandler = require('express-async-handler');
-const { body, query, validationResult } = require('express-validator');
+const { body, query, params, validationResult } = require('express-validator');
 
-const User = require('../models/user');
+const Topic = require('../models/topic');
 
 require('dotenv').config();
 
-exports.authors_get = [
+exports.topics_get = [
   query('limit', 'Limit query must have valid format')
     .default(+process.env.MAX_DOCS_PER_FETCH)
     .trim()
@@ -23,7 +23,7 @@ exports.authors_get = [
     .trim()
     .isInt()
     .customSanitizer(async (value) => {
-      const docCount = await User.countDocuments().exec();
+      const docCount = await Topic.countDocuments().exec();
 
       if (value < 0 || value > Math.ceil(docCount / process.env.MAX_DOCS_PER_FETCH)) {
         return 0;
@@ -36,16 +36,16 @@ exports.authors_get = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json(errors.array());
+      res.send(400).json(errors.array());
     } else {
       const { limit, page } = req.query;
 
-      const users = await User.find({}, 'username bio')
+      const topics = await Topic.find({}, 'name')
         .skip(page * process.env.MAX_DOCS_PER_FETCH)
         .limit(limit)
         .exec();
 
-      res.json(users);
+      res.json(topics);
     }
   }),
 ];

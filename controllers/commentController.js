@@ -62,7 +62,6 @@ exports.comments_get = [
       if (allCommentsByPost === undefined) {
         res.sendStatus(404);
       } else {
-        console.log(allCommentsByPost);
         res.json(allCommentsByPost);
       }
     }

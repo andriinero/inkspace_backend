@@ -69,7 +69,10 @@ exports.post_get = [
     if (!errors.isEmpty()) {
       res.status(400).json({ errors: errors.array() });
     } else {
-      const post = await Post.findById(req.params.postid);
+      const post = await Post.findById(req.params.postid)
+        .populate('author', 'username email')
+        .populate('topic', 'name')
+        .exec();
 
       if (!post) {
         res.sendStatus(404);
