@@ -10,8 +10,6 @@ require('dotenv').config();
 
 const User = require('../models/user');
 
-exports.login_get = [];
-
 exports.login_post = [
   body('username', 'Invalid username format').notEmpty().trim().escape(),
   body('password', 'Invalid password format').notEmpty().trim().escape(),
@@ -48,6 +46,54 @@ exports.login_post = [
   }),
 ];
 
-exports.singup_get = [];
+exports.signup_post = [
+  body('username')
+    .trim()
+    .isLength({ min: 3, max: 100 })
+    .custom(async (value) => {
+      const userByUsername = await User.findOne({ username: value });
 
-exports.singup_post = [];
+      if (userByUsername) throw new Error('User with this name already exists');
+    })
+    .escape(),
+  body('password').trim().isLength({ min: 8 }).escape(),
+  body('passwordConfirmation')
+    .trim()
+    .custom((value, { req }) => {
+      if (value !== req.body.password) {
+        throw new Error('Passwords do not match');
+      } else {
+        return true;
+      }
+    })
+    .escape(),
+  body('email')
+    .trim()
+    .custom(async (value) => {
+      const userByEmail = await User.findOne({ email: value });
+
+      if (userByEmail) throw new Error('User with this email already exists');
+    })
+    .escape(),
+  asyncHandler(async (req, res, next) => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      res.status(400).json({ errors: errors.array() });
+    } else {
+      const salt = +process.env.SALT_VALUE;
+      const hashedPassword = await bcrypt.hash(req.body.password, salt);
+
+      const userDetail = {
+        username: req.body.username,
+        password: hashedPassword,
+      };
+
+      const user = new User(userDetail);
+
+      const newUser = await user.save();
+
+      res.sendStatus(200);
+    }
+  }),
+];

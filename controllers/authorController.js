@@ -43,6 +43,7 @@ exports.authors_get = [
       const users = await User.find({}, 'username bio')
         .skip(page * process.env.MAX_DOCS_PER_FETCH)
         .limit(limit)
+        .sort({sign_up_date: -1})
         .exec();
 
       res.json(users);
