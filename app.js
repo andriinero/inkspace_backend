@@ -9,6 +9,7 @@ const indexRouter = require('./routes/index');
 const postRouter = require('./routes/postRouter');
 const authorRouter = require('./routes/authorRouter');
 const topicRouter = require('./routes/topicRouter');
+const authRouter = require('./routes/authRouter');
 
 require('dotenv').config();
 
@@ -32,5 +33,6 @@ app.use('/', indexRouter);
 app.use('/api/posts', postRouter);
 app.use('/api/authors', authorRouter);
 app.use('/api/topics', topicRouter);
+app.use('/auth', authRouter);
 
 module.exports = app;

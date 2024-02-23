@@ -90,7 +90,7 @@ exports.comment_get = [
       const comment = await Comment.findOne({
         _id: req.params.commentid,
         post: req.params.postid,
-      });
+      }).exec();
 
       if (!comment) {
         res.sendStatus(404);

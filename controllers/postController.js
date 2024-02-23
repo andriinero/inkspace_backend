@@ -85,9 +85,7 @@ exports.post_get = [
 
 exports.post_post = [
   body('title', 'Title must have correct length').trim().isLength({ min: 3, max: 100 }),
-  body('body', 'Post body must have correct length')
-    .trim()
-    .isLength({ min: 3, max: 500 }),
+  body('body', 'Post body must have correct length').trim().isLength({ min: 100 }),
   asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
 
