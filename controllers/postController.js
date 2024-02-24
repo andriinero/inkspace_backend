@@ -189,11 +189,7 @@ exports.post_put = [
             { new: true, runValidators: true }
           );
 
-          if (!updatedPost) {
-            res.sendStatus(404);
-          } else {
-            res.json(updatedPost);
-          }
+          res.json(updatedPost);
         }
       }
     }

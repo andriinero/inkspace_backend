@@ -130,8 +130,8 @@ exports.comment_post = [
         res.sendStatus(404);
       } else {
         const commentDetail = {
+          author: req.user._id,
           post: req.params.postid,
-          email: req.body.email,
           title: req.body.title,
           body: req.body.body,
           date: new Date(),
@@ -182,25 +182,31 @@ exports.comment_put = [
     if (!errors.array()) {
       res.status(400).json({ errors: errors.array() });
     } else {
-      const commentDetail = {
-        email: req.body.email,
-        title: req.body.title,
-        body: req.body.body,
-      };
+      const commentById = await Comment.findById(req.params.commentid).exec();
 
-      const updatedComment = await Comment.findOneAndUpdate(
-        {
-          _id: req.params.commentid,
-          post: req.params.postid,
-        },
-        commentDetail,
-        { new: true }
-      );
-
-      if (!updatedComment) {
+      if (!commentById) {
         res.sendStatus(404);
       } else {
-        res.json(updatedComment);
+        if (!commentById.author._id.equals(req.user._id)) {
+          res.sendStatus(403);
+        } else {
+          const commentDetail = {
+            email: req.body.email,
+            title: req.body.title,
+            body: req.body.body,
+          };
+
+          const updatedComment = await Comment.findOneAndUpdate(
+            {
+              _id: req.params.commentid,
+              post: req.params.postid,
+            },
+            commentDetail,
+            { new: true, runValidators: true }
+          );
+
+          res.json(updatedComment);
+        }
       }
     }
   }),
@@ -226,15 +232,21 @@ exports.comment_delete = [
     if (!errors.isEmpty()) {
       res.status(400).json({ errors: errors.array() });
     } else {
-      const deletedComment = await Comment.findByIdAndDelete({
-        _id: req.params.commentid,
-        post: req.params.postid,
-      });
+      const commentById = await Comment.findById(req.params.commentid).exec();
 
-      if (!deletedComment) {
+      if (!commentById) {
         res.sendStatus(404);
       } else {
-        res.json(deletedComment);
+        if (!commentById.author._id.equals(req.user._id)) {
+         res.sendStatus(403); 
+        } else {
+          const deletedComment = await Comment.findByIdAndDelete({
+            _id: req.params.commentid,
+            post: req.params.postid,
+          });
+
+          res.json(deletedComment);
+        }
       }
     }
   }),

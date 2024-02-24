@@ -76,10 +76,10 @@ async function postCreate(index, author, title, body, topic) {
   console.log(`Added post: ${title}`);
 }
 
-async function commentCreate(index, post, email, title, body) {
+async function commentCreate(index, author, post, title, body) {
   const commentDetail = {
+    author,
     post,
-    email,
     title,
     body,
     date: new Date(),
@@ -177,22 +177,22 @@ async function createComments() {
   await Promise.all([
     commentCreate(
       0,
+      users[0],
       posts[0],
-      'example@gmail.com',
       "That's a crazy post",
       'western wall stick crack rubber serve prove two volume nearly noted swept scene railroad aboard at share impossible have future method alike fastened ready'
     ),
     commentCreate(
       1,
+      users[0],
       posts[0],
-      'coolemail@gmail.com',
       'You are doing a great job',
       'sister slide bear now pleasure daily itself unusual test hand waste prize palace silk situation went further bell forgotten keep alone white they chose'
     ),
     commentCreate(
       2,
+      users[1],
       posts[1],
-      'me@gmail.com',
       'Keep up the work',
       'grandmother able might next met supply greatest common fine than rich carry ice complex may industry food folks think moving once solar air volume'
     ),
