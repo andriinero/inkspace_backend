@@ -9,6 +9,7 @@ const { default: mongoose } = require('mongoose');
 require('dotenv').config();
 
 //TODO: data manipulation for admin role only
+//TODO: fix errors message response delivery
 exports.topics_get = [
   query('limit', 'Limit query must have valid format')
     .default(+process.env.MAX_DOCS_PER_FETCH)
@@ -100,7 +101,7 @@ exports.topic_post = [
   }),
 ];
 
-exports.topics_put = [
+exports.topic_put = [
   passport.authenticate('jwt', { session: false }),
   param('topicid', 'Topic id must have valid format')
     .trim()
@@ -138,7 +139,7 @@ exports.topics_put = [
   }),
 ];
 
-exports.topics_delete = [
+exports.topic_delete = [
   passport.authenticate('jwt', { session: false }),
   param('topicid', 'Topic id must have valid format')
     .trim()

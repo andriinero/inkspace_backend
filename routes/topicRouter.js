@@ -7,4 +7,12 @@ const topicController = require('../controllers/topicController');
 
 router.get('/', topicController.topics_get);
 
+router.get('/:topicid', topicController.topic_get);
+
+router.post('/', topicController.topic_post);
+
+router.put('/:topicid', topicController.topic_put);
+
+router.delete('/:topicid', topicController.topic_delete);
+
 module.exports = router;
