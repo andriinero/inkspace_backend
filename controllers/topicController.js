@@ -66,7 +66,7 @@ exports.topic_get = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.sendStatus(400);
+      res.status(400).json({ errors: errors.array() });
     } else {
       const topicById = await Topic.findById(req.params.topicid).exec();
 
@@ -89,7 +89,7 @@ exports.topic_post = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.sendStatus(400);
+      res.status(400).json({ errors: errors.array() });
     } else {
       const topicDetail = { name: req.body.name };
 
@@ -117,7 +117,7 @@ exports.topic_put = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.sendStatus(400);
+      res.status(400).json({ errors: errors.array() });
     } else {
       const topicDetail = { name: req.body.name };
 
@@ -151,7 +151,7 @@ exports.topic_delete = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.sendStatus(400);
+      res.status(400).json({ errors: errors.array() });
     } else {
       const deletedTopic = await Topic.findByIdAndDelete(req.params.topicid).exec();
 
