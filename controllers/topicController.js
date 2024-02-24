@@ -3,6 +3,7 @@ const { body, query, params, validationResult } = require('express-validator');
 const passport = require('passport');
 
 const Topic = require('../models/topic');
+const user = require('../models/user');
 
 require('dotenv').config();
 
@@ -33,7 +34,6 @@ exports.topics_get = [
       }
     })
     .escape(),
-  passport.authenticate('jwt', { session: false }),
   asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
 

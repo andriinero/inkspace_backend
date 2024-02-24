@@ -31,7 +31,7 @@ exports.login_post = [
         if (!match) {
           res.status(404).json({ message: 'Error: incorrect credentials.' });
         } else {
-          const opts = { expiresIn: '20m' };
+          const opts = { expiresIn: '1d' };
           const secret = process.env.SECRET_KEY;
           const jwtPayload = {
             sub: userByUsername._id,

@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 
 const Comment = require('../models/comment');
 const Post = require('../models/post');
+const passport = require('passport');
 
 require('dotenv').config();
 
@@ -102,6 +103,7 @@ exports.comment_get = [
 ];
 
 exports.comment_post = [
+  passport.authenticate('jwt', { session: false }),
   param('postid', 'Post id must be valid')
     .trim()
     .custom((value) => {
@@ -148,6 +150,7 @@ exports.comment_post = [
 ];
 
 exports.comment_put = [
+  passport.authenticate('jwt', { session: false }),
   param('postid', 'Post id must be valid')
     .trim()
     .custom((value) => {
@@ -204,6 +207,7 @@ exports.comment_put = [
 ];
 
 exports.comment_delete = [
+  passport.authenticate('jwt', { session: false }),
   param('postid', 'Post id must be valid')
     .trim()
     .custom((value) => {

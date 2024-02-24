@@ -6,6 +6,7 @@ const User = require('../models/user');
 const Topic = require('../models/topic');
 
 const mongoose = require('mongoose');
+const passport = require('passport');
 
 require('dotenv').config();
 
@@ -45,10 +46,11 @@ exports.posts_get = [
       const { page, limit } = req.query;
 
       const allPosts = await Post.find({})
-        .skip(page * process.env.MAX_DOCS_PER_FETCH)
+        .skip(page * +process.env.MAX_DOCS_PER_FETCH)
         .limit(limit)
         .populate('author', 'username email')
         .populate('topic', 'name')
+        .sort({ date: -1 })
         .exec();
 
       res.json(allPosts);
@@ -84,24 +86,44 @@ exports.post_get = [
 ];
 
 exports.post_post = [
+  passport.authenticate('jwt', { session: false }),
   body('title', 'Title must have correct length').trim().isLength({ min: 3, max: 100 }),
   body('body', 'Post body must have correct length').trim().isLength({ min: 100 }),
+  body('topic', 'Topic must be valid')
+    .trim()
+    .custom(async (value) => {
+      const isValid = mongoose.Types.ObjectId.isValid(value);
+
+      if (!isValid) {
+        throw new Error('Invalid topic id');
+      } else {
+        const topic = await Topic.findOne({ _id: value }).exec();
+
+        if (!topic) throw new Error('Invalid topic');
+      }
+    })
+    .escape(),
   asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
       res.status(400).json({ errors: errors.array() });
     } else {
+      const user = req.user;
+
       const postDetail = {
-        // hardcoded: auth not implemented
-        author: '65c20bf87454d893cab48638',
+        author: user._id,
         title: req.body.title,
         body: req.body.body,
+        topic: req.body.topic,
         date: new Date(),
       };
 
       const post = new Post(postDetail);
       const newPost = await post.save();
+
+      user.user_posts.push(newPost);
+      user.save();
 
       res.json(newPost);
     }
@@ -109,6 +131,7 @@ exports.post_post = [
 ];
 
 exports.post_put = [
+  passport.authenticate('jwt', { session: false }),
   param('postid', 'Post id must be valid')
     .trim()
     .custom((value) => {
@@ -122,34 +145,55 @@ exports.post_put = [
   body('body', 'Post body must have correct length')
     .optional()
     .trim()
-    .isLength({ min: 3, max: 100 }),
+    .isLength({ min: 100 }),
+  body('topic', 'Topic must be valid')
+    .optional()
+    .trim()
+    .custom(async (value) => {
+      const isValid = mongoose.Types.ObjectId.isValid(value);
+
+      if (!isValid) {
+        throw new Error('Invalid topic id');
+      } else {
+        const topic = await Topic.findOne({ _id: value }).exec();
+
+        if (!topic) throw new Error('Invalid topic');
+      }
+    })
+    .escape(),
   asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
       res.status(400).json({ errors: errors.array() });
     } else {
-      const postDetail = {
-        title: req.body.title,
-        body: req.body.body,
-      };
+      const postById = await Post.findById(req.params.postid).exec();
 
-      const updatedPost = await Post.findByIdAndUpdate(req.params.postid, postDetail, {
-        new: true,
-      })
-        .populate('author', 'username email')
-        .exec();
-
-      if (!updatedPost) {
-        res.sendStatus(404);
+      if (!postById.author._id.equals(req.user._id)) {
+        res.sendStatus(403);
       } else {
-        res.json(updatedPost);
+        const postDetail = {
+          title: req.body.title,
+          body: req.body.body,
+          topic: req.body.topic,
+        };
+
+        const updatedPost = await Post.findByIdAndUpdate(req.params.postid, postDetail, {
+          new: true,
+        }).exec();
+
+        if (!updatedPost) {
+          res.sendStatus(404);
+        } else {
+          res.json(updatedPost);
+        }
       }
     }
   }),
 ];
 
 exports.post_delete = [
+  passport.authenticate('jwt', { session: false }),
   param('postid', 'Post id must be valid')
     .trim()
     .custom((value) => {
@@ -162,12 +206,18 @@ exports.post_delete = [
     if (!errors.isEmpty()) {
       res.status(400).json({ errors: errors.array() });
     } else {
-      const deletedPost = await Post.findByIdAndDelete(req.params.postid);
+      const postById = await Post.findById(req.params.postid).exec();
 
-      if (!deletedPost) {
-        res.sendStatus(404);
+      if (!postById.author._id.equals(req.user._id)) {
+        res.sendStatus(403);
       } else {
-        res.json(deletedPost);
+        const deletedPost = await Post.findByIdAndDelete(req.params.postid);
+
+        if (!deletedPost) {
+          res.sendStatus(404);
+        } else {
+          res.json(deletedPost);
+        }
       }
     }
   }),
