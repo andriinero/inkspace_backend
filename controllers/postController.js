@@ -37,7 +37,7 @@ exports.posts_get = [
       }
     })
     .escape(),
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -65,7 +65,7 @@ exports.post_get = [
       return mongoose.Types.ObjectId.isValid(value);
     })
     .escape(),
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -88,7 +88,9 @@ exports.post_get = [
 exports.post_post = [
   passport.authenticate('jwt', { session: false }),
   body('title', 'Title must have correct length').trim().isLength({ min: 3, max: 100 }),
-  body('body', 'Post body must have correct length').trim().isLength({ min: 100 }),
+  body('body', 'Post body must have correct length')
+    .trim()
+    .isLength({ min: 100, max: 10000 }),
   body('topic', 'Topic must be valid')
     .trim()
     .custom(async (value) => {
@@ -103,7 +105,7 @@ exports.post_post = [
       }
     })
     .escape(),
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -119,13 +121,13 @@ exports.post_post = [
         date: new Date(),
       };
 
-      const post = new Post(postDetail);
-      const newPost = await post.save();
+      const newPost = new Post(postDetail);
+      const savedPost = await newPost.save();
 
-      user.user_posts.push(newPost);
-      user.save();
+      user.user_posts.push(savedPost);
+      await user.save();
 
-      res.json(newPost);
+      res.json(savedPost);
     }
   }),
 ];
@@ -145,7 +147,7 @@ exports.post_put = [
   body('body', 'Post body must have correct length')
     .optional()
     .trim()
-    .isLength({ min: 100 }),
+    .isLength({ min: 100, max: 10000 }),
   body('topic', 'Topic must be valid')
     .optional()
     .trim()
@@ -161,7 +163,7 @@ exports.post_put = [
       }
     })
     .escape(),
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -169,23 +171,29 @@ exports.post_put = [
     } else {
       const postById = await Post.findById(req.params.postid).exec();
 
-      if (!postById.author._id.equals(req.user._id)) {
-        res.sendStatus(403);
+      if (!postById) {
+        res.sendStatus(404);
       } else {
-        const postDetail = {
-          title: req.body.title,
-          body: req.body.body,
-          topic: req.body.topic,
-        };
-
-        const updatedPost = await Post.findByIdAndUpdate(req.params.postid, postDetail, {
-          new: true,
-        }).exec();
-
-        if (!updatedPost) {
-          res.sendStatus(404);
+        if (!postById.author._id.equals(req.user._id)) {
+          res.sendStatus(403);
         } else {
-          res.json(updatedPost);
+          const postDetail = {
+            title: req.body.title,
+            body: req.body.body,
+            topic: req.body.topic,
+          };
+
+          const updatedPost = await Post.findByIdAndUpdate(
+            req.params.postid,
+            postDetail,
+            { new: true, runValidators: true }
+          );
+
+          if (!updatedPost) {
+            res.sendStatus(404);
+          } else {
+            res.json(updatedPost);
+          }
         }
       }
     }
@@ -200,7 +208,7 @@ exports.post_delete = [
       return mongoose.Types.ObjectId.isValid(value);
     })
     .escape(),
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -208,14 +216,14 @@ exports.post_delete = [
     } else {
       const postById = await Post.findById(req.params.postid).exec();
 
-      if (!postById.author._id.equals(req.user._id)) {
-        res.sendStatus(403);
+      if (!postById) {
+        res.sendStatus(404);
       } else {
-        const deletedPost = await Post.findByIdAndDelete(req.params.postid);
-
-        if (!deletedPost) {
-          res.sendStatus(404);
+        if (!postById.author._id.equals(req.user._id)) {
+          res.sendStatus(403);
         } else {
+          const deletedPost = await postById.deleteOne();
+
           res.json(deletedPost);
         }
       }
