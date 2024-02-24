@@ -10,6 +10,8 @@ require('dotenv').config();
 
 const User = require('../models/user');
 
+exports.login_get = [asyncHandler(async (req, res, next) => {})];
+
 exports.login_post = [
   body('username', 'Invalid username format').notEmpty().trim().escape(),
   body('password', 'Invalid password format').notEmpty().trim().escape(),
@@ -29,9 +31,10 @@ exports.login_post = [
         if (!match) {
           res.status(404).json({ message: 'Error: incorrect credentials.' });
         } else {
-          const opts = { expiresIn: '120s' };
+          const opts = { expiresIn: '20m' };
           const secret = process.env.SECRET_KEY;
           const jwtPayload = {
+            sub: userByUsername._id,
             username: userByUsername.username,
             email: userByUsername.email,
             role: userByUsername.role,
@@ -53,7 +56,11 @@ exports.signup_post = [
     .custom(async (value) => {
       const userByUsername = await User.findOne({ username: value });
 
-      if (userByUsername) throw new Error('User with this name already exists');
+      if (userByUsername) {
+        throw new Error('User with this name already exists');
+      } else {
+        return true;
+      }
     })
     .escape(),
   body('password').trim().isLength({ min: 8 }).escape(),
@@ -69,10 +76,15 @@ exports.signup_post = [
     .escape(),
   body('email')
     .trim()
+    .isEmail()
     .custom(async (value) => {
       const userByEmail = await User.findOne({ email: value });
 
-      if (userByEmail) throw new Error('User with this email already exists');
+      if (userByEmail) {
+        throw new Error('User with this email already exists');
+      } else {
+        return true;
+      }
     })
     .escape(),
   asyncHandler(async (req, res, next) => {
@@ -87,6 +99,7 @@ exports.signup_post = [
       const userDetail = {
         username: req.body.username,
         password: hashedPassword,
+        email: req.body.email,
       };
 
       const user = new User(userDetail);

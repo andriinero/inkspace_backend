@@ -4,14 +4,24 @@ const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const passport = require('passport');
+const JWTStrategy = require('passport-jwt').Strategy;
+const ExtractJWT = require('passport-jwt').ExtractJwt;
+
+require('dotenv').config();
+
+const User = require('./models/user');
+
+const strategyOpts = {
+  jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken(),
+  secretOrKey: process.env.SECRET_KEY,
+};
 
 const indexRouter = require('./routes/index');
 const postRouter = require('./routes/postRouter');
 const authorRouter = require('./routes/authorRouter');
 const topicRouter = require('./routes/topicRouter');
 const authRouter = require('./routes/authRouter');
-
-require('dotenv').config();
 
 const app = express();
 
@@ -24,10 +34,26 @@ main().catch((err) => console.log(err.message));
 
 app.use(cors());
 app.use(logger('dev'));
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+passport.use(
+  new JWTStrategy(strategyOpts, async (jwt_payload, done) => {
+    try {
+      const user = await User.findOne({ _id: jwt_payload.sub });
+
+      if (user) {
+        return done(null, user);
+      } else {
+        return done(null, null);
+      }
+    } catch (err) {
+      return done(err, null);
+    }
+  })
+);
 
 app.use('/', indexRouter);
 app.use('/api/posts', postRouter);

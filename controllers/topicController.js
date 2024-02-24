@@ -1,5 +1,6 @@
 const asyncHandler = require('express-async-handler');
 const { body, query, params, validationResult } = require('express-validator');
+const passport = require('passport');
 
 const Topic = require('../models/topic');
 
@@ -32,6 +33,7 @@ exports.topics_get = [
       }
     })
     .escape(),
+  passport.authenticate('jwt', { session: false }),
   asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
 
