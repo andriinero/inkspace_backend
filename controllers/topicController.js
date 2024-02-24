@@ -1,12 +1,14 @@
 const asyncHandler = require('express-async-handler');
-const { body, query, params, validationResult } = require('express-validator');
+const { body, query, validationResult, param } = require('express-validator');
 const passport = require('passport');
 
 const Topic = require('../models/topic');
 const user = require('../models/user');
+const { default: mongoose } = require('mongoose');
 
 require('dotenv').config();
 
+//TODO: data manipulation for admin role only
 exports.topics_get = [
   query('limit', 'Limit query must have valid format')
     .default(+process.env.MAX_DOCS_PER_FETCH)
@@ -34,7 +36,7 @@ exports.topics_get = [
       }
     })
     .escape(),
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -48,6 +50,115 @@ exports.topics_get = [
         .exec();
 
       res.json(topics);
+    }
+  }),
+];
+
+exports.topic_get = [
+  param('topicid', 'Topic id must be valid')
+    .trim()
+    .custom((value) => {
+      return mongoose.Types.ObjectId.isValid(value);
+    })
+    .escape(),
+  asyncHandler(async (req, res) => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      res.sendStatus(400);
+    } else {
+      const topicById = await Topic.findById(req.params.topicid).exec();
+
+      if (!topicById) {
+        res.sendStatus(404);
+      } else {
+        res.json(topicById);
+      }
+    }
+  }),
+];
+
+exports.topic_post = [
+  passport.authenticate('jwt', { session: false }),
+  body('name', 'Name must have valid format')
+    .trim()
+    .isLength({ min: 3, max: 100 })
+    .escape(),
+  asyncHandler(async (req, res) => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      res.sendStatus(400);
+    } else {
+      const topicDetail = { name: req.body.name };
+
+      const newTopic = new Topic(topicDetail);
+      const savedTopic = await newTopic.save();
+
+      res.json(savedTopic);
+    }
+  }),
+];
+
+exports.topics_put = [
+  passport.authenticate('jwt', { session: false }),
+  param('topicid', 'Topic id must have valid format')
+    .trim()
+    .custom((value) => {
+      return mongoose.Types.ObjectId.isValid(value);
+    })
+    .escape(),
+  body('name', 'Name must have valid format')
+    .trim()
+    .isLength({ min: 3, max: 100 })
+    .escape(),
+  asyncHandler(async (req, res) => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      res.sendStatus(400);
+    } else {
+      const topicDetail = { name: req.body.name };
+
+      const updatedTopic = await Topic.findByIdAndUpdate(
+        req.params.topicid,
+        topicDetail,
+        {
+          new: true,
+          runValidators: true,
+        }
+      ).exec();
+
+      if (!updatedTopic) {
+        res.sendStatus(404);
+      } else {
+        res.json(updatedTopic);
+      }
+    }
+  }),
+];
+
+exports.topics_delete = [
+  passport.authenticate('jwt', { session: false }),
+  param('topicid', 'Topic id must have valid format')
+    .trim()
+    .custom((value) => {
+      return mongoose.Types.ObjectId.isValid(value);
+    })
+    .escape(),
+  asyncHandler(async (req, res) => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      res.sendStatus(400);
+    } else {
+      const deletedTopic = await Topic.findByIdAndDelete(req.params.topicid).exec();
+
+      if (!deletedTopic) {
+        res.sendStatus(400);
+      } else {
+        res.json(deletedTopic);
+      }
     }
   }),
 ];

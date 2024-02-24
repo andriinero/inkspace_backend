@@ -47,7 +47,7 @@ exports.comments_get = [
       }
     })
     .escape(),
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -82,7 +82,7 @@ exports.comment_get = [
       return mongoose.Types.ObjectId.isValid(value);
     })
     .escape(),
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -118,7 +118,7 @@ exports.comment_post = [
   body('body', 'Comment body must have correct length')
     .trim()
     .isLength({ min: 10, maxLength: 280 }),
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -176,7 +176,7 @@ exports.comment_put = [
     .optional()
     .trim()
     .isLength({ min: 10, maxLength: 280 }),
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.array()) {
@@ -226,7 +226,7 @@ exports.comment_delete = [
       return mongoose.Types.ObjectId.isValid(value);
     })
     .escape(),
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -238,7 +238,7 @@ exports.comment_delete = [
         res.sendStatus(404);
       } else {
         if (!commentById.author._id.equals(req.user._id)) {
-         res.sendStatus(403); 
+          res.sendStatus(403);
         } else {
           const deletedComment = await Comment.findByIdAndDelete({
             _id: req.params.commentid,
