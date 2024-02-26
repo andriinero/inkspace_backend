@@ -1,15 +1,14 @@
 const asyncHandler = require('express-async-handler');
 const { body, query, validationResult, param } = require('express-validator');
+const mongoose = require('mongoose');
 const passport = require('passport');
 
 const Topic = require('../models/topic');
 const user = require('../models/user');
-const { default: mongoose } = require('mongoose');
 
 require('dotenv').config();
 
-//TODO: data manipulation for admin role only
-//TODO: fix errors message response delivery
+// TODO: data manipulation for admin role only
 exports.topics_get = [
   query('limit', 'Limit query must have valid format')
     .default(+process.env.MAX_DOCS_PER_FETCH)

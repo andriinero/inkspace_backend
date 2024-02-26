@@ -1,21 +1,31 @@
 const asyncHandler = require('express-async-handler');
 const { body, validationResult } = require('express-validator');
+const passport = require('passport');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-
-const passport = require('passport');
-const jwtStrategy = require('passport-jwt');
 
 require('dotenv').config();
 
 const User = require('../models/user');
 
-exports.login_get = [asyncHandler(async (req, res, next) => {})];
+exports.login_get = [
+  passport.authenticate('jwt', { session: false }),
+  asyncHandler(async (req, res) => {
+    const authData = {
+      sub: req.user._id,
+      username: req.user.username,
+      role: req.user.role,
+    };
 
+    res.json(authData);
+  }),
+];
+
+// FIXME: json err objects with messages
 exports.login_post = [
   body('username', 'Invalid username format').notEmpty().trim().escape(),
   body('password', 'Invalid password format').notEmpty().trim().escape(),
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -24,12 +34,12 @@ exports.login_post = [
       const userByUsername = await User.findOne({ username: req.body.username }).exec();
 
       if (!userByUsername) {
-        res.status(404).json({ message: 'Error: incorrect credentials.' });
+        res.status(401).json({ message: 'Error: incorrect credentials.' });
       } else {
         const match = await bcrypt.compare(req.body.password, userByUsername.password);
 
         if (!match) {
-          res.status(404).json({ message: 'Error: incorrect credentials.' });
+          res.status(401).json({ message: 'Error: incorrect credentials.' });
         } else {
           const opts = { expiresIn: '1d' };
           const secret = process.env.SECRET_KEY;
@@ -87,7 +97,7 @@ exports.signup_post = [
       }
     })
     .escape(),
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -102,9 +112,9 @@ exports.signup_post = [
         email: req.body.email,
       };
 
-      const user = new User(userDetail);
+      const newUser = new User(userDetail);
 
-      const newUser = await user.save();
+      await newUser.save();
 
       res.sendStatus(200);
     }

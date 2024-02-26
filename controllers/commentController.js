@@ -1,13 +1,14 @@
 const { body, param, query, validationResult } = require('express-validator');
 const asyncHandler = require('express-async-handler');
 const mongoose = require('mongoose');
+const passport = require('passport');
 
 const Comment = require('../models/comment');
 const Post = require('../models/post');
-const passport = require('passport');
 
 require('dotenv').config();
 
+// TODO: comment edit date stamp
 exports.comments_get = [
   param('postid', 'Post id must be valid')
     .trim()
@@ -110,10 +111,6 @@ exports.comment_post = [
       return mongoose.Types.ObjectId.isValid(value);
     })
     .escape(),
-  body('email', 'Email must have correct format')
-    .trim()
-    .isEmail()
-    .isLength({ min: 3, max: 100 }),
   body('title', 'Title must have correct length').trim().isLength({ min: 3, max: 100 }),
   body('body', 'Comment body must have correct length')
     .trim()
@@ -163,11 +160,6 @@ exports.comment_put = [
       return mongoose.Types.ObjectId.isValid(value);
     })
     .escape(),
-  body('email', 'Email must have correct format')
-    .optional()
-    .trim()
-    .isEmail()
-    .isLength({ min: 3, max: 10 }),
   body('title', 'Title must have correct length')
     .optional()
     .trim()
@@ -179,7 +171,7 @@ exports.comment_put = [
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
-    if (!errors.array()) {
+    if (!errors.isEmpty()) {
       res.status(400).json({ errors: errors.array() });
     } else {
       const commentById = await Comment.findById(req.params.commentid).exec();

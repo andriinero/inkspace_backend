@@ -1,12 +1,11 @@
 const asyncHandler = require('express-async-handler');
 const { body, param, query, validationResult } = require('express-validator');
+const mongoose = require('mongoose');
+const passport = require('passport');
 
 const Post = require('../models/post');
 const User = require('../models/user');
 const Topic = require('../models/topic');
-
-const mongoose = require('mongoose');
-const passport = require('passport');
 
 require('dotenv').config();
 
@@ -73,6 +72,7 @@ exports.post_get = [
     } else {
       const post = await Post.findById(req.params.postid)
         .populate('author', 'username email')
+        .populate('comments')
         .populate('topic', 'name')
         .exec();
 

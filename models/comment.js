@@ -7,6 +7,7 @@ const CommentSchema = new Schema({
   title: { type: String, required: true, minLength: 3, maxLength: 100 },
   body: { type: String, required: true, minLength: 10, maxLength: 280 },
   date: { type: Date, required: true },
+  edit_date: { type: Date },
 });
 
 CommentSchema.virtual('url').get(function () {
