@@ -59,6 +59,7 @@ exports.comments_get = [
       const allCommentsByPost = await Comment.find({ post: req.params.postid })
         .skip(page * process.env.MAX_DOCS_PER_FETCH)
         .limit(limit)
+        .populate('authors')
         .exec();
 
       if (allCommentsByPost === undefined) {
@@ -92,7 +93,9 @@ exports.comment_get = [
       const comment = await Comment.findOne({
         _id: req.params.commentid,
         post: req.params.postid,
-      }).exec();
+      })
+        .populate('author')
+        .exec();
 
       if (!comment) {
         res.sendStatus(404);

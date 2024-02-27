@@ -72,7 +72,7 @@ exports.post_get = [
     } else {
       const post = await Post.findById(req.params.postid)
         .populate('author', 'username email')
-        .populate('comments')
+        .populate({ path: 'comments', populate: { path: 'author', model: 'User' } })
         .populate('topic', 'name')
         .exec();
 
