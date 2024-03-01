@@ -59,7 +59,8 @@ exports.comments_get = [
       const allCommentsByPost = await Comment.find({ post: req.params.postid })
         .skip(page * process.env.MAX_DOCS_PER_FETCH)
         .limit(limit)
-        .populate('authors')
+        .populate('author')
+        .sort({ date: -1 })
         .exec();
 
       if (allCommentsByPost === undefined) {
@@ -114,7 +115,6 @@ exports.comment_post = [
       return mongoose.Types.ObjectId.isValid(value);
     })
     .escape(),
-  body('title', 'Title must have correct length').trim().isLength({ min: 3, max: 100 }),
   body('body', 'Comment body must have correct length')
     .trim()
     .isLength({ min: 10, maxLength: 280 }),
@@ -132,7 +132,6 @@ exports.comment_post = [
         const commentDetail = {
           author: req.user._id,
           post: req.params.postid,
-          title: req.body.title,
           body: req.body.body,
           date: new Date(),
         };
@@ -186,8 +185,6 @@ exports.comment_put = [
           res.sendStatus(403);
         } else {
           const commentDetail = {
-            email: req.body.email,
-            title: req.body.title,
             body: req.body.body,
           };
 

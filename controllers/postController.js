@@ -40,7 +40,7 @@ exports.posts_get = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json(errors.array());
+      res.status(400).json({ errors: errors.array() });
     } else {
       const { page, limit } = req.query;
 
@@ -72,7 +72,10 @@ exports.post_get = [
     } else {
       const post = await Post.findById(req.params.postid)
         .populate('author', 'username email')
-        .populate({ path: 'comments', populate: { path: 'author', model: 'User' } })
+        .populate({
+          path: 'comments',
+          populate: { path: 'author', model: 'User' },
+        })
         .populate('topic', 'name')
         .exec();
 
