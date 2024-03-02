@@ -19,6 +19,7 @@ const strategyOpts = {
 
 const indexRouter = require('./routes/index');
 const postRouter = require('./routes/postRouter');
+const commentRouter = require('./routes/commentRouter');
 const authorRouter = require('./routes/authorRouter');
 const topicRouter = require('./routes/topicRouter');
 const authRouter = require('./routes/authRouter');
@@ -57,6 +58,7 @@ passport.use(
 
 app.use('/', indexRouter);
 app.use('/api/posts', postRouter);
+app.use('api/comments', commentRouter);
 app.use('/api/authors', authorRouter);
 app.use('/api/topics', topicRouter);
 app.use('/auth', authRouter);

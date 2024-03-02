@@ -70,12 +70,8 @@ exports.post_get = [
     if (!errors.isEmpty()) {
       res.status(400).json({ errors: errors.array() });
     } else {
-      const post = await Post.findById(req.params.postid)
+      const post = await Post.findById(req.params.postid, '-comments')
         .populate('author', 'username email')
-        .populate({
-          path: 'comments',
-          populate: { path: 'author', model: 'User' },
-        })
         .populate('topic', 'name')
         .exec();
 

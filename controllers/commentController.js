@@ -56,10 +56,11 @@ exports.comments_get = [
     } else {
       const { limit, page } = req.query;
 
+      // TODO: search by post/not entire db
       const allCommentsByPost = await Comment.find({ post: req.params.postid })
         .skip(page * process.env.MAX_DOCS_PER_FETCH)
         .limit(limit)
-        .populate('author')
+        .populate('author', 'username role')
         .sort({ date: -1 })
         .exec();
 
@@ -73,12 +74,6 @@ exports.comments_get = [
 ];
 
 exports.comment_get = [
-  param('postid', 'Post id must be valid')
-    .trim()
-    .custom((value) => {
-      return mongoose.Types.ObjectId.isValid(value);
-    })
-    .escape(),
   param('commentid', 'Comment id must be valid')
     .trim()
     .custom((value) => {
@@ -91,11 +86,8 @@ exports.comment_get = [
     if (!errors.isEmpty()) {
       res.status(400).json({ errors: errors.array() });
     } else {
-      const comment = await Comment.findOne({
-        _id: req.params.commentid,
-        post: req.params.postid,
-      })
-        .populate('author')
+      const comment = await Comment.findById(req.params.commentid)
+        .populate('author', 'username role')
         .exec();
 
       if (!comment) {
@@ -138,6 +130,7 @@ exports.comment_post = [
 
         const newComment = new Comment(commentDetail);
         const savedComment = await newComment.save();
+        savedComment.populate('author', 'username role');
 
         post.comments.push(savedComment);
         await post.save();
@@ -150,12 +143,6 @@ exports.comment_post = [
 
 exports.comment_put = [
   passport.authenticate('jwt', { session: false }),
-  param('postid', 'Post id must be valid')
-    .trim()
-    .custom((value) => {
-      return mongoose.Types.ObjectId.isValid(value);
-    })
-    .escape(),
   param('commentid', 'Comment id must be valid')
     .trim()
     .custom((value) => {
@@ -188,11 +175,8 @@ exports.comment_put = [
             body: req.body.body,
           };
 
-          const updatedComment = await Comment.findOneAndUpdate(
-            {
-              _id: req.params.commentid,
-              post: req.params.postid,
-            },
+          const updatedComment = await Comment.findByIdAndUpdate(
+            req.params.commentid,
             commentDetail,
             { new: true, runValidators: true }
           );
@@ -206,12 +190,6 @@ exports.comment_put = [
 
 exports.comment_delete = [
   passport.authenticate('jwt', { session: false }),
-  param('postid', 'Post id must be valid')
-    .trim()
-    .custom((value) => {
-      return mongoose.Types.ObjectId.isValid(value);
-    })
-    .escape(),
   param('commentid', 'Comment id must be valid')
     .trim()
     .custom((value) => {
@@ -234,7 +212,6 @@ exports.comment_delete = [
         } else {
           const deletedComment = await Comment.findByIdAndDelete({
             _id: req.params.commentid,
-            post: req.params.postid,
           });
 
           res.json(deletedComment);
