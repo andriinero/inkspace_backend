@@ -149,10 +149,6 @@ exports.comment_put = [
       return mongoose.Types.ObjectId.isValid(value);
     })
     .escape(),
-  body('title', 'Title must have correct length')
-    .optional()
-    .trim()
-    .isLength({ min: 3, max: 100 }),
   body('body', 'Comment body must have correct length')
     .optional()
     .trim()
@@ -210,11 +206,9 @@ exports.comment_delete = [
         if (!commentById.author._id.equals(req.user._id)) {
           res.sendStatus(403);
         } else {
-          const deletedComment = await Comment.findByIdAndDelete({
-            _id: req.params.commentid,
-          });
+          await commentById.deleteOne();
 
-          res.json(deletedComment);
+          res.json(commentById);
         }
       }
     }

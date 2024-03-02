@@ -58,7 +58,7 @@ passport.use(
 
 app.use('/', indexRouter);
 app.use('/api/posts', postRouter);
-app.use('api/comments', commentRouter);
+app.use('/api/comments', commentRouter);
 app.use('/api/authors', authorRouter);
 app.use('/api/topics', topicRouter);
 app.use('/auth', authRouter);
