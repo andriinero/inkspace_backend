@@ -13,8 +13,6 @@ router.post('/bio', profileController.bio_post);
 
 router.put('/bio', profileController.bio_put);
 
-router.delete('/bio', profileController.bio_delete);
-
 // BOOKMARKS //
 
 router.get('/bookmarks', profileController.bookmarks_get);

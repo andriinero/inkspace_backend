@@ -6,6 +6,7 @@ const passport = require('passport');
 const User = require('../models/user');
 const Post = require('../models/post');
 const Topic = require('../models/topic');
+const user = require('../models/user');
 
 require('dotenv').config();
 
@@ -25,24 +26,72 @@ exports.profile_get = [
   }),
 ];
 
+// FIXME: add sanitizers, validation error messages
 exports.bio_get = [
   passport.authenticate('jwt', { session: false }),
-  asyncHandler(async (req, res, next) => {}),
+  asyncHandler(async (req, res, next) => {
+    const userById = await User.findById(req.user._id, 'bio').exec();
+
+    if (!userById) {
+      res.sendStatus(404);
+    } else {
+      res.send(userById);
+    }
+  }),
 ];
 
 exports.bio_post = [
   passport.authenticate('jwt', { session: false }),
-  asyncHandler(async (req, res, next) => {}),
+  body('biobody')
+    .trim()
+    .isLength({ max: 280 })
+    .custom(async (value, { req }) => {
+      const userById = await User.findById(req.user._id).exec();
+
+      if (userById && userById.bio) throw new Error('User bio already exists');
+    })
+    .escape(),
+  asyncHandler(async (req, res, next) => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      res.status(400).send({ errors: errors.array() });
+    } else {
+      const userById = await User.findById(req.user._id, 'bio').exec();
+
+      if (!userById) {
+        res.sendStatus(404);
+      } else {
+        userById.bio = req.body.biobody;
+        await userById.save();
+
+        res.send(userById);
+      }
+    }
+  }),
 ];
 
 exports.bio_put = [
   passport.authenticate('jwt', { session: false }),
-  asyncHandler(async (req, res, next) => {}),
-];
+  body('biobody').trim().isLength({ max: 280 }).escape(),
+  asyncHandler(async (req, res, next) => {
+    const errors = validationResult(req);
 
-exports.bio_delete = [
-  passport.authenticate('jwt', { session: false }),
-  asyncHandler(async (req, res, next) => {}),
+    if (!errors.isEmpty()) {
+      res.status(400).send({ errors: errors.array() });
+    } else {
+      const userById = await User.findById(req.user._id, 'bio').exec();
+
+      if (!userById) {
+        res.sendStatus(404);
+      } else {
+        userById.bio = req.body.biobody;
+        await userById.save();
+
+        res.send(userById);
+      }
+    }
+  }),
 ];
 
 exports.bookmarks_get = [
@@ -111,7 +160,7 @@ exports.bookmark_post = [
       if (!postById) throw new Error("Post with this id doesn't exist");
     })
     .custom(async (value, { req }) => {
-      const userById = await User.findById(req.user._id);
+      const userById = await User.findById(req.user._id).exec();
 
       if (userById.post_bookmarks.some((objId) => objId.toString() === value))
         throw new Error('This bookmark already exists');
@@ -239,7 +288,7 @@ exports.ignored_post_post = [
       if (!postById) throw new Error("Post with this id doesn't exist");
     })
     .custom(async (value, { req }) => {
-      const userById = await User.findById(req.user._id);
+      const userById = await User.findById(req.user._id).exec();
 
       if (userById.ignored_posts.some((objId) => objId.toString() === value))
         throw new Error('This post is already ignored');
@@ -274,7 +323,7 @@ exports.ignored_post_delete = [
       if (!postById) throw new Error("Post with this id doesn't exist");
     })
     .custom(async (value, { req }) => {
-      const userById = await User.findById(req.user._id);
+      const userById = await User.findById(req.user._id).exec();
 
       if (!userById.ignored_posts.some((objId) => objId.toString() === value))
         throw new Error("This ignored post doesn't exist");
@@ -367,7 +416,7 @@ exports.ignored_topic_post = [
       if (!topicById) throw new Error("Topic with this id doesn't exist");
     })
     .custom(async (value, { req }) => {
-      const userById = await User.findById(req.user._id);
+      const userById = await User.findById(req.user._id).exec();
 
       if (userById.ignored_topics.some((objId) => objId.toString() === value))
         throw new Error('This topic is already ignored');
@@ -402,7 +451,7 @@ exports.ignored_topic_delete = [
       if (!topicById) throw new Error("Topic with this id doesn't exist");
     })
     .custom(async (value, { req }) => {
-      const userById = await User.findById(req.user._id);
+      const userById = await User.findById(req.user._id).exec();
 
       if (!userById.ignored_topics.some((objId) => objId.toString() === value))
         throw new Error("This ignored topic doesn't exist");
@@ -530,7 +579,7 @@ exports.followed_user_delete = [
       if (!userById) throw new Error("User with this id doesn't exist");
     })
     .custom(async (value, { req }) => {
-      const userById = await User.findById(req.user._id);
+      const userById = await User.findById(req.user._id).exec();
 
       if (!userById.followed_users.some((objId) => objId.toString() === value))
         throw new Error("This followed user doesn't exist");
