@@ -8,7 +8,6 @@ const Post = require('../models/post');
 
 require('dotenv').config();
 
-// TODO: comment edit date stamp
 exports.comments_get = [
   param('postid', 'Post id must be valid')
     .trim()

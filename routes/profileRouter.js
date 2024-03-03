@@ -3,6 +3,8 @@ const router = express.Router();
 
 const profileController = require('../controllers/profileController');
 
+router.get('/', profileController.profile_get);
+
 router.get('/bio', profileController.bio_get);
 
 router.post('/bio', profileController.bio_post);
@@ -12,6 +14,8 @@ router.put('/bio', profileController.bio_put);
 router.delete('/bio', profileController.bio_delete);
 
 router.get('/bookmarks', profileController.bookmarks_get);
+
+router.post('/bookmarks', profileController.bookmark_post);
 
 router.delete('/bookmarks/:postid', profileController.bookmark_delete);
 
