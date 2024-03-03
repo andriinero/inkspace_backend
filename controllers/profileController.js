@@ -26,7 +26,6 @@ exports.profile_get = [
   }),
 ];
 
-// FIXME: add sanitizers, validation error messages
 exports.bio_get = [
   passport.authenticate('jwt', { session: false }),
   asyncHandler(async (req, res, next) => {
@@ -153,6 +152,7 @@ exports.bookmarks_get = [
 exports.bookmark_post = [
   passport.authenticate('jwt', { session: false }),
   body('postid', 'Bookmark id must be valid')
+    .trim()
     .custom((value) => mongoose.Types.ObjectId.isValid(value))
     .custom(async (value) => {
       const postById = await Post.findById(value).exec();
@@ -164,7 +164,8 @@ exports.bookmark_post = [
 
       if (userById.post_bookmarks.some((objId) => objId.toString() === value))
         throw new Error('This bookmark already exists');
-    }),
+    })
+    .escape(),
   asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
 
@@ -188,6 +189,7 @@ exports.bookmark_post = [
 exports.bookmark_delete = [
   passport.authenticate('jwt', { session: false }),
   param('postid', 'Post id must be valid')
+    .trim()
     .custom((value) => mongoose.Types.ObjectId.isValid(value))
     .custom(async (value) => {
       const postById = await Post.findById(value).exec();
@@ -199,7 +201,8 @@ exports.bookmark_delete = [
 
       if (!userById.post_bookmarks.some((objId) => objId.toString() === value))
         throw new Error("This bookmark doesn't exist");
-    }),
+    })
+    .escape(),
   asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
 
@@ -281,6 +284,7 @@ exports.ignored_posts_get = [
 exports.ignored_post_post = [
   passport.authenticate('jwt', { session: false }),
   body('postid', 'Post id must be valid')
+    .trim()
     .custom((value) => mongoose.Types.ObjectId.isValid(value))
     .custom(async (value) => {
       const postById = await Post.findById(value).exec();
@@ -292,7 +296,8 @@ exports.ignored_post_post = [
 
       if (userById.ignored_posts.some((objId) => objId.toString() === value))
         throw new Error('This post is already ignored');
-    }),
+    })
+    .escape(),
   asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
 
@@ -316,6 +321,7 @@ exports.ignored_post_post = [
 exports.ignored_post_delete = [
   passport.authenticate('jwt', { session: false }),
   param('postid', 'Post id must be valid')
+    .trim()
     .custom((value) => mongoose.Types.ObjectId.isValid(value))
     .custom(async (value) => {
       const postById = await Post.findById(value).exec();
@@ -327,7 +333,8 @@ exports.ignored_post_delete = [
 
       if (!userById.ignored_posts.some((objId) => objId.toString() === value))
         throw new Error("This ignored post doesn't exist");
-    }),
+    })
+    .escape(),
   asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
 
@@ -409,6 +416,7 @@ exports.ignored_topics_get = [
 exports.ignored_topic_post = [
   passport.authenticate('jwt', { session: false }),
   body('topicid', 'Topic id must be valid')
+    .trim()
     .custom((value) => mongoose.Types.ObjectId.isValid(value))
     .custom(async (value) => {
       const topicById = await Topic.findById(value).exec();
@@ -420,7 +428,8 @@ exports.ignored_topic_post = [
 
       if (userById.ignored_topics.some((objId) => objId.toString() === value))
         throw new Error('This topic is already ignored');
-    }),
+    })
+    .escape(),
   asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
 
@@ -444,6 +453,7 @@ exports.ignored_topic_post = [
 exports.ignored_topic_delete = [
   passport.authenticate('jwt', { session: false }),
   param('topicid', 'Topic id must be valid')
+    .trim()
     .custom((value) => mongoose.Types.ObjectId.isValid(value))
     .custom(async (value) => {
       const topicById = await Topic.findById(value).exec();
@@ -455,7 +465,8 @@ exports.ignored_topic_delete = [
 
       if (!userById.ignored_topics.some((objId) => objId.toString() === value))
         throw new Error("This ignored topic doesn't exist");
-    }),
+    })
+    .escape(),
   asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
 
@@ -537,6 +548,7 @@ exports.followed_users_get = [
 exports.followed_user_post = [
   passport.authenticate('jwt', { session: false }),
   body('userid', 'User id must be valid')
+    .trim()
     .custom((value) => mongoose.Types.ObjectId.isValid(value))
     .custom(async (value) => {
       const userById = await User.findById(value).exec();
@@ -548,7 +560,8 @@ exports.followed_user_post = [
 
       if (userById.followed_users.some((objId) => objId.toString() === value))
         throw new Error('User with this id is already followed');
-    }),
+    })
+    .escape(),
   asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
 
@@ -572,6 +585,7 @@ exports.followed_user_post = [
 exports.followed_user_delete = [
   passport.authenticate('jwt', { session: false }),
   param('userid', 'User id must be valid')
+    .trim()
     .custom((value) => mongoose.Types.ObjectId.isValid(value))
     .custom(async (value) => {
       const userById = await User.findById(value).exec();
@@ -583,7 +597,8 @@ exports.followed_user_delete = [
 
       if (!userById.followed_users.some((objId) => objId.toString() === value))
         throw new Error("This followed user doesn't exist");
-    }),
+    })
+    .escape(),
   asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
 
