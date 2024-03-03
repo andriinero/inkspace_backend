@@ -22,6 +22,7 @@ const postRouter = require('./routes/postRouter');
 const commentRouter = require('./routes/commentRouter');
 const authorRouter = require('./routes/authorRouter');
 const topicRouter = require('./routes/topicRouter');
+const profileRouter = require('./routes/profileRouter');
 const authRouter = require('./routes/authRouter');
 
 const app = express();
@@ -61,6 +62,7 @@ app.use('/api/posts', postRouter);
 app.use('/api/comments', commentRouter);
 app.use('/api/authors', authorRouter);
 app.use('/api/topics', topicRouter);
+app.use('/api/profile', profileRouter);
 app.use('/auth', authRouter);
 
 module.exports = app;
