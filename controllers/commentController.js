@@ -169,6 +169,7 @@ exports.comment_put = [
         } else {
           const commentDetail = {
             body: req.body.body,
+            edit_date: new Date(), 
           };
 
           const updatedComment = await Comment.findByIdAndUpdate(
