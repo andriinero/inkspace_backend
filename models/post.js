@@ -8,6 +8,7 @@ const PostSchema = new Schema({
   date: { type: Date, required: true },
   topic: { type: Schema.Types.ObjectId, required: true, ref: 'Topic' },
   comments: [{ type: Schema.Types.ObjectId, required: true, ref: 'Comment' }],
+  like_count: { type: Number, required: true, default: 0 },
 });
 
 PostSchema.virtual('url').get(function () {

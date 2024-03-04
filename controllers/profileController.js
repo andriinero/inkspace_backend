@@ -6,7 +6,6 @@ const passport = require('passport');
 const User = require('../models/user');
 const Post = require('../models/post');
 const Topic = require('../models/topic');
-const user = require('../models/user');
 
 require('dotenv').config();
 

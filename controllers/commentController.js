@@ -131,7 +131,7 @@ exports.comment_post = [
 
         const newComment = new Comment(commentDetail);
         const savedComment = await newComment.save();
-        savedComment.populate('author', 'username role');
+        await savedComment.populate('author', 'username role');
 
         post.comments.push(savedComment);
         await post.save();

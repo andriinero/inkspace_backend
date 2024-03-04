@@ -3,6 +3,7 @@ const router = express.Router();
 
 const postController = require('../controllers/postController');
 const commentController = require('../controllers/commentController');
+const likeController = require('../controllers/likeController');
 
 // POSTS //
 
@@ -21,5 +22,11 @@ router.delete('/:postid', postController.post_delete);
 router.get('/:postid/comments', commentController.comments_get);
 
 router.post('/:postid/comments', commentController.comment_post);
+
+// LIKES //
+
+router.get('/:postid/likes', likeController.likes_get);
+
+router.put('/:postid/likes', likeController.likes_put);
 
 module.exports = router;
