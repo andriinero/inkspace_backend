@@ -13,10 +13,7 @@ require('dotenv').config();
 exports.profile_get = [
   passport.authenticate('jwt', { session: false }),
   asyncHandler(async (req, res, next) => {
-    const userById = await User.findById(
-      req.user._id,
-      '-password -__v'
-    ).exec();
+    const userById = await User.findById(req.user._id, '-password -__v').exec();
 
     if (!userById) {
       res.sendStatus(404);
@@ -214,7 +211,9 @@ exports.bookmark_delete = [
       if (!userById) {
         res.sendStatus(404);
       } else {
-        const index = userById.post_bookmarks.findIndex((id) => id === req.params.postid);
+        const index = userById.post_bookmarks.findIndex(
+          (p) => p._id.toString() === req.params.postid
+        );
         const removedBookmark = userById.post_bookmarks.splice(index, 1)[0];
 
         await userById.save();
