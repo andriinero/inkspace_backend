@@ -5,9 +5,11 @@ const passport = require('passport');
 
 const Comment = require('../models/comment');
 const Post = require('../models/post');
+const post = require('../models/post');
 
 require('dotenv').config();
 
+// FIXME: postid should be query
 exports.comments_get = [
   param('postid', 'Post id must be valid')
     .trim()
@@ -168,7 +170,7 @@ exports.comment_put = [
         } else {
           const commentDetail = {
             body: req.body.body,
-            edit_date: new Date(), 
+            edit_date: new Date(),
           };
 
           const updatedComment = await Comment.findByIdAndUpdate(
@@ -199,14 +201,22 @@ exports.comment_delete = [
       res.status(400).json({ errors: errors.array() });
     } else {
       const commentById = await Comment.findById(req.params.commentid).exec();
+      const postById = await Post.findById(commentById.post).exec();
 
-      if (!commentById) {
+      if (!commentById || !postById) {
         res.sendStatus(404);
       } else {
         if (!commentById.author._id.equals(req.user._id)) {
           res.sendStatus(403);
         } else {
-          await commentById.deleteOne();
+          const result = await commentById.deleteOne();
+
+          if (result.acknowledged) {
+            postById.comments = postById.comments.filter(
+              (c) => !c.equals(commentById._id)
+            );
+            await postById.save();
+          }
 
           res.json(commentById);
         }

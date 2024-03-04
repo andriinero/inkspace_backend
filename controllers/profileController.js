@@ -15,7 +15,7 @@ exports.profile_get = [
   asyncHandler(async (req, res, next) => {
     const userById = await User.findById(
       req.user._id,
-      'username email role bio sign_up_date'
+      '-password -__v'
     ).exec();
 
     if (!userById) {
@@ -215,7 +215,7 @@ exports.bookmark_delete = [
         res.sendStatus(404);
       } else {
         const index = userById.post_bookmarks.findIndex((id) => id === req.params.postid);
-        const removedBookmark = userById.post_bookmarks.splice(index, 1);
+        const removedBookmark = userById.post_bookmarks.splice(index, 1)[0];
 
         await userById.save();
 
