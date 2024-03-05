@@ -29,7 +29,7 @@ exports.login_post = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json(errors.array());
+      res.status(400).json({ errors: errors.array()});
     } else {
       const userByUsername = await User.findOne({ username: req.body.username }).exec();
 
@@ -42,7 +42,7 @@ exports.login_post = [
           res.status(401).json({ message: 'Error: incorrect credentials.' });
         } else {
           const opts = { expiresIn: '1d' };
-          const secret = process.env.SECRET_KEY;
+          const SECRET_KEY = process.env.SECRET_KEY;
           const jwtPayload = {
             sub: userByUsername._id,
             username: userByUsername.username,
@@ -50,7 +50,7 @@ exports.login_post = [
             role: userByUsername.role,
           };
 
-          const token = jwt.sign(jwtPayload, secret, opts);
+          const token = jwt.sign(jwtPayload, SECRET_KEY, opts);
 
           res.json({ message: 'Login successful', token });
         }
@@ -103,8 +103,8 @@ exports.signup_post = [
     if (!errors.isEmpty()) {
       res.status(400).json({ errors: errors.array() });
     } else {
-      const salt = +process.env.SALT_VALUE;
-      const hashedPassword = await bcrypt.hash(req.body.password, salt);
+      const SALT_VALUE = +process.env.SALT_VALUE;
+      const hashedPassword = await bcrypt.hash(req.body.password, SALT_VALUE);
 
       const userDetail = {
         username: req.body.username,

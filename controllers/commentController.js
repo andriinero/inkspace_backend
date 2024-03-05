@@ -5,20 +5,19 @@ const passport = require('passport');
 
 const Comment = require('../models/comment');
 const Post = require('../models/post');
-const post = require('../models/post');
 
 require('dotenv').config();
+
+const MAX_DOCS_PER_FETCH = process.env.MAX_DOCS_PER_FETCH;
 
 // FIXME: postid should be query
 exports.comments_get = [
   param('postid', 'Post id must be valid')
     .trim()
-    .custom((value) => {
-      return mongoose.Types.ObjectId.isValid(value);
-    })
+    .custom((value) => mongoose.Types.ObjectId.isValid(value))
     .escape(),
   query('limit', 'Limit query must have valid format')
-    .default(+process.env.MAX_DOCS_PER_FETCH)
+    .default(+MAX_DOCS_PER_FETCH)
     .trim()
     .isInt()
     .customSanitizer((value) => {
@@ -41,7 +40,7 @@ exports.comments_get = [
       } else {
         const docCount = await Comment.countDocuments({ post: req.params.postid }).exec();
 
-        if (value < 0 || value > Math.ceil(docCount / process.env.MAX_DOCS_PER_FETCH)) {
+        if (value < 0 || value > Math.ceil(docCount / MAX_DOCS_PER_FETCH)) {
           return 0;
         } else {
           return --value;
@@ -59,7 +58,7 @@ exports.comments_get = [
 
       // TODO: search by post/not entire db
       const allCommentsByPost = await Comment.find({ post: req.params.postid })
-        .skip(page * process.env.MAX_DOCS_PER_FETCH)
+        .skip(page * MAX_DOCS_PER_FETCH)
         .limit(limit)
         .populate('author', 'username role')
         .sort({ date: -1 })
@@ -77,9 +76,7 @@ exports.comments_get = [
 exports.comment_get = [
   param('commentid', 'Comment id must be valid')
     .trim()
-    .custom((value) => {
-      return mongoose.Types.ObjectId.isValid(value);
-    })
+    .custom((value) => mongoose.Types.ObjectId.isValid(value))
     .escape(),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
@@ -104,9 +101,7 @@ exports.comment_post = [
   passport.authenticate('jwt', { session: false }),
   param('postid', 'Post id must be valid')
     .trim()
-    .custom((value) => {
-      return mongoose.Types.ObjectId.isValid(value);
-    })
+    .custom((value) => mongoose.Types.ObjectId.isValid(value))
     .escape(),
   body('body', 'Comment body must have correct length')
     .trim()
@@ -146,9 +141,7 @@ exports.comment_put = [
   passport.authenticate('jwt', { session: false }),
   param('commentid', 'Comment id must be valid')
     .trim()
-    .custom((value) => {
-      return mongoose.Types.ObjectId.isValid(value);
-    })
+    .custom((value) => mongoose.Types.ObjectId.isValid(value))
     .escape(),
   body('body', 'Comment body must have correct length')
     .optional()
@@ -190,9 +183,7 @@ exports.comment_delete = [
   passport.authenticate('jwt', { session: false }),
   param('commentid', 'Comment id must be valid')
     .trim()
-    .custom((value) => {
-      return mongoose.Types.ObjectId.isValid(value);
-    })
+    .custom((value) => mongoose.Types.ObjectId.isValid(value))
     .escape(),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);

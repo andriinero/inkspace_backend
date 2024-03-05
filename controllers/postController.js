@@ -9,9 +9,11 @@ const Topic = require('../models/topic');
 
 require('dotenv').config();
 
+const MAX_DOCS_PER_FETCH = process.env.MAX_DOCS_PER_FETCH;
+
 exports.posts_get = [
   query('limit', 'Limit query must have valid format')
-    .default(+process.env.MAX_DOCS_PER_FETCH)
+    .default(+MAX_DOCS_PER_FETCH)
     .trim()
     .isInt()
     .customSanitizer((value) => {
@@ -29,7 +31,7 @@ exports.posts_get = [
     .customSanitizer(async (value) => {
       const docCount = await Post.countDocuments().exec();
 
-      if (value < 0 || value > Math.ceil(docCount / process.env.MAX_DOCS_PER_FETCH)) {
+      if (value < 0 || value > Math.ceil(docCount / MAX_DOCS_PER_FETCH)) {
         return 0;
       } else {
         return --value;
@@ -45,7 +47,7 @@ exports.posts_get = [
       const { page, limit } = req.query;
 
       const allPosts = await Post.find({})
-        .skip(page * +process.env.MAX_DOCS_PER_FETCH)
+        .skip(page * +MAX_DOCS_PER_FETCH)
         .limit(limit)
         .populate('author', 'username email')
         .populate('topic', 'name')
@@ -60,9 +62,7 @@ exports.posts_get = [
 exports.post_get = [
   param('postid', 'Post id must be valid')
     .trim()
-    .custom((value) => {
-      return mongoose.Types.ObjectId.isValid(value);
-    })
+    .custom((value) => mongoose.Types.ObjectId.isValid(value))
     .escape(),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
@@ -70,8 +70,9 @@ exports.post_get = [
     if (!errors.isEmpty()) {
       res.status(400).json({ errors: errors.array() });
     } else {
-      const post = await Post.findById(req.params.postid, '-comments')
+      const post = await Post.findById(req.params.postid)
         .populate('author', 'username email')
+        .populate({ path: 'comments', populate: { path: 'author', model: 'User' } })
         .populate('topic', 'name')
         .exec();
 
@@ -135,9 +136,7 @@ exports.post_put = [
   passport.authenticate('jwt', { session: false }),
   param('postid', 'Post id must be valid')
     .trim()
-    .custom((value) => {
-      return mongoose.Types.ObjectId.isValid(value);
-    })
+    .custom((value) => mongoose.Types.ObjectId.isValid(value))
     .escape(),
   body('title', 'Title must have correct length')
     .optional()
@@ -199,9 +198,7 @@ exports.post_delete = [
   passport.authenticate('jwt', { session: false }),
   param('postid', 'Post id must be valid')
     .trim()
-    .custom((value) => {
-      return mongoose.Types.ObjectId.isValid(value);
-    })
+    .custom((value) => mongoose.Types.ObjectId.isValid(value))
     .escape(),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);

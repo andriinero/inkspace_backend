@@ -9,9 +9,11 @@ const Topic = require('../models/topic');
 
 require('dotenv').config();
 
+const MAX_DOCS_PER_FETCH = process.env.MAX_DOCS_PER_FETCH;
+
 exports.profile_get = [
   passport.authenticate('jwt', { session: false }),
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
     const userById = await User.findById(req.user._id, '-password -__v').exec();
 
     if (!userById) {
@@ -24,7 +26,7 @@ exports.profile_get = [
 
 exports.bio_get = [
   passport.authenticate('jwt', { session: false }),
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
     const userById = await User.findById(req.user._id, 'bio').exec();
 
     if (!userById) {
@@ -40,13 +42,13 @@ exports.bio_post = [
   body('biobody')
     .trim()
     .isLength({ max: 280 })
-    .custom(async (value, { req }) => {
+    .custom(async (_, { req }) => {
       const userById = await User.findById(req.user._id).exec();
 
       if (userById && userById.bio) throw new Error('User bio already exists');
     })
     .escape(),
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -69,7 +71,7 @@ exports.bio_post = [
 exports.bio_put = [
   passport.authenticate('jwt', { session: false }),
   body('biobody').trim().isLength({ max: 280 }).escape(),
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -92,7 +94,7 @@ exports.bio_put = [
 exports.bookmarks_get = [
   passport.authenticate('jwt', { session: false }),
   query('limit', 'Limit query must have valid format')
-    .default(+process.env.MAX_DOCS_PER_FETCH)
+    .default(+MAX_DOCS_PER_FETCH)
     .trim()
     .isInt()
     .customSanitizer((value) => {
@@ -110,18 +112,18 @@ exports.bookmarks_get = [
     .customSanitizer(async (value) => {
       const docCount = await Post.countDocuments().exec();
 
-      if (value < 0 || value > Math.ceil(docCount / process.env.MAX_DOCS_PER_FETCH)) {
+      if (value < 0 || value > Math.ceil(docCount / MAX_DOCS_PER_FETCH)) {
         return 0;
       } else {
         return --value;
       }
     })
     .escape(),
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.sendStatus(400);
+      res.status(400).json({ errors: errors.array() });
     } else {
       const { limit, page } = req.query;
 
@@ -131,7 +133,7 @@ exports.bookmarks_get = [
           options: {
             select: '-body -comments',
             limit,
-            skip: page * +process.env.MAX_DOCS_PER_FETCH,
+            skip: page * MAX_DOCS_PER_FETCH,
           },
         })
         .exec();
@@ -162,7 +164,7 @@ exports.bookmark_post = [
         throw new Error('This bookmark already exists');
     })
     .escape(),
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -199,7 +201,7 @@ exports.bookmark_delete = [
         throw new Error("This bookmark doesn't exist");
     })
     .escape(),
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -226,7 +228,7 @@ exports.bookmark_delete = [
 exports.ignored_posts_get = [
   passport.authenticate('jwt', { session: false }),
   query('limit', 'Limit query must have valid format')
-    .default(+process.env.MAX_DOCS_PER_FETCH)
+    .default(+MAX_DOCS_PER_FETCH)
     .trim()
     .isInt()
     .customSanitizer((value) => {
@@ -244,14 +246,14 @@ exports.ignored_posts_get = [
     .customSanitizer(async (value) => {
       const docCount = await Post.countDocuments().exec();
 
-      if (value < 0 || value > Math.ceil(docCount / process.env.MAX_DOCS_PER_FETCH)) {
+      if (value < 0 || value > Math.ceil(docCount / MAX_DOCS_PER_FETCH)) {
         return 0;
       } else {
         return --value;
       }
     })
     .escape(),
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -265,7 +267,7 @@ exports.ignored_posts_get = [
           options: {
             select: '-body -comments',
             limit,
-            skip: page * +process.env.MAX_DOCS_PER_FETCH,
+            skip: page * +MAX_DOCS_PER_FETCH,
           },
         })
         .exec();
@@ -296,7 +298,7 @@ exports.ignored_post_post = [
         throw new Error('This post is already ignored');
     })
     .escape(),
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -333,7 +335,7 @@ exports.ignored_post_delete = [
         throw new Error("This ignored post doesn't exist");
     })
     .escape(),
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -358,7 +360,7 @@ exports.ignored_post_delete = [
 exports.ignored_topics_get = [
   passport.authenticate('jwt', { session: false }),
   query('limit', 'Limit query must have valid format')
-    .default(+process.env.MAX_DOCS_PER_FETCH)
+    .default(+MAX_DOCS_PER_FETCH)
     .trim()
     .isInt()
     .customSanitizer((value) => {
@@ -376,18 +378,18 @@ exports.ignored_topics_get = [
     .customSanitizer(async (value) => {
       const docCount = await Post.countDocuments().exec();
 
-      if (value < 0 || value > Math.ceil(docCount / process.env.MAX_DOCS_PER_FETCH)) {
+      if (value < 0 || value > Math.ceil(docCount / MAX_DOCS_PER_FETCH)) {
         return 0;
       } else {
         return --value;
       }
     })
     .escape(),
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.sendStatus(400);
+      res.status(400).json({ errors: errors.array() });
     } else {
       const { limit, page } = req.query;
 
@@ -397,7 +399,7 @@ exports.ignored_topics_get = [
           options: {
             select: '-body -comments',
             limit,
-            skip: page * +process.env.MAX_DOCS_PER_FETCH,
+            skip: page * MAX_DOCS_PER_FETCH,
           },
         })
         .exec();
@@ -428,7 +430,7 @@ exports.ignored_topic_post = [
         throw new Error('This topic is already ignored');
     })
     .escape(),
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -465,7 +467,7 @@ exports.ignored_topic_delete = [
         throw new Error("This ignored topic doesn't exist");
     })
     .escape(),
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -490,7 +492,7 @@ exports.ignored_topic_delete = [
 exports.followed_users_get = [
   passport.authenticate('jwt', { session: false }),
   query('limit', 'Limit query must have valid format')
-    .default(+process.env.MAX_DOCS_PER_FETCH)
+    .default(+MAX_DOCS_PER_FETCH)
     .trim()
     .isInt()
     .customSanitizer((value) => {
@@ -508,18 +510,18 @@ exports.followed_users_get = [
     .customSanitizer(async (value) => {
       const docCount = await Post.countDocuments().exec();
 
-      if (value < 0 || value > Math.ceil(docCount / process.env.MAX_DOCS_PER_FETCH)) {
+      if (value < 0 || value > Math.ceil(docCount / MAX_DOCS_PER_FETCH)) {
         return 0;
       } else {
         return --value;
       }
     })
     .escape(),
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.sendStatus(400);
+      res.status(400).json({ errors: errors.array() });
     } else {
       const { limit, page } = req.query;
 
@@ -529,7 +531,7 @@ exports.followed_users_get = [
           options: {
             select: '-body -comments',
             limit,
-            skip: page * +process.env.MAX_DOCS_PER_FETCH,
+            skip: page * +MAX_DOCS_PER_FETCH,
           },
         })
         .exec();
@@ -560,7 +562,7 @@ exports.followed_user_post = [
         throw new Error('User with this id is already followed');
     })
     .escape(),
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -597,7 +599,7 @@ exports.followed_user_delete = [
         throw new Error("This followed user doesn't exist");
     })
     .escape(),
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {

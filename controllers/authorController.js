@@ -1,15 +1,15 @@
 const asyncHandler = require('express-async-handler');
-const { body, query, validationResult } = require('express-validator');
-const mongoose = require('mongoose');
-const passport = require('passport');
+const { query, validationResult } = require('express-validator');
 
 const User = require('../models/user');
 
 require('dotenv').config();
 
+const MAX_DOCS_PER_FETCH = process.env.MAX_DOCS_PER_FETCH;
+
 exports.authors_get = [
   query('limit', 'Limit query must have valid format')
-    .default(+process.env.MAX_DOCS_PER_FETCH)
+    .default(+MAX_DOCS_PER_FETCH)
     .trim()
     .isInt()
     .customSanitizer((value) => {
@@ -27,7 +27,7 @@ exports.authors_get = [
     .customSanitizer(async (value) => {
       const docCount = await User.countDocuments().exec();
 
-      if (value < 0 || value > Math.ceil(docCount / process.env.MAX_DOCS_PER_FETCH)) {
+      if (value < 0 || value > Math.ceil(docCount / MAX_DOCS_PER_FETCH)) {
         return 0;
       } else {
         return --value;
@@ -43,7 +43,7 @@ exports.authors_get = [
       const { limit, page } = req.query;
 
       const users = await User.find({}, 'username bio')
-        .skip(page * process.env.MAX_DOCS_PER_FETCH)
+        .skip(page * MAX_DOCS_PER_FETCH)
         .limit(limit)
         .sort({ sign_up_date: -1 })
         .exec();
