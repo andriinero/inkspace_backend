@@ -131,10 +131,11 @@ exports.bookmarks_get = [
         .populate({
           path: 'post_bookmarks',
           options: {
-            select: '-body -comments',
+            select: '-comments',
             limit,
             skip: page * MAX_DOCS_PER_FETCH,
           },
+          populate: { path: 'author', select: 'username email' },
         })
         .exec();
 
@@ -346,8 +347,10 @@ exports.ignored_post_delete = [
       if (!userById) {
         res.sendStatus(404);
       } else {
-        const index = userById.ignored_posts.findIndex((id) => id === req.params.postid);
-        const removedIgnoredPost = userById.ignored_posts.splice(index, 1);
+        const index = userById.ignored_posts.findIndex(
+          (p) => p._id.toString() === req.params.postid
+        );
+        const removedIgnoredPost = userById.ignored_posts.splice(index, 1)[0];
 
         await userById.save();
 
@@ -478,8 +481,10 @@ exports.ignored_topic_delete = [
       if (!userById) {
         res.sendStatus(404);
       } else {
-        const index = userById.ignored_topics.findIndex((id) => id === req.params.postid);
-        const removedIgnoredTopic = userById.ignored_topics.splice(index, 1);
+        const index = userById.ignored_topics.findIndex(
+          (p) => p._id.toString() === req.params.topicid
+        );
+        const removedIgnoredTopic = userById.ignored_topics.splice(index, 1)[0];
 
         await userById.save();
 
@@ -610,8 +615,10 @@ exports.followed_user_delete = [
       if (!userById) {
         res.sendStatus(404);
       } else {
-        const index = userById.followed_users.findIndex((id) => id === req.params.postid);
-        const removedFollowedUser = userById.followed_users.splice(index, 1);
+        const index = userById.followed_users.findIndex(
+          (p) => p._id.toString() === req.params.userid
+        );
+        const removedFollowedUser = userById.followed_users.splice(index, 1)[0];
 
         await userById.save();
 
