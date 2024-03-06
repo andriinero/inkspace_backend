@@ -38,16 +38,30 @@ exports.posts_get = [
       }
     })
     .escape(),
+  query('topic', 'Topic must be valid')
+    .default('')
+    .trim()
+    .escape()
+    .customSanitizer(async (value) => {
+      const topicByName = await Topic.findOne({ name: value }).exec();
+
+      if (topicByName) return topicByName._id.toString();
+      if (mongoose.Types.ObjectId.isValid(value)) return value;
+    }),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
       res.status(400).json({ errors: errors.array() });
     } else {
-      const { page, limit } = req.query;
+      const { page, limit, topic } = req.query;
 
-      const allPosts = await Post.find({})
-        .skip(page * +MAX_DOCS_PER_FETCH)
+      const queryOpts = {};
+
+      if (topic) queryOpts['topic'] = topic;
+
+      const allPosts = await Post.find(queryOpts)
+        .skip(page * MAX_DOCS_PER_FETCH)
         .limit(limit)
         .populate('author', 'username email')
         .populate('topic', 'name')

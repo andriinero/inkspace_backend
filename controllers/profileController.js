@@ -267,7 +267,7 @@ exports.ignored_posts_get = [
           options: {
             select: '-body -comments',
             limit,
-            skip: page * +MAX_DOCS_PER_FETCH,
+            skip: page * MAX_DOCS_PER_FETCH,
           },
         })
         .exec();
@@ -531,7 +531,7 @@ exports.followed_users_get = [
           options: {
             select: '-body -comments',
             limit,
-            skip: page * +MAX_DOCS_PER_FETCH,
+            skip: page * MAX_DOCS_PER_FETCH,
           },
         })
         .exec();

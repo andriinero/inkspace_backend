@@ -6,7 +6,6 @@ const passport = require('passport');
 const Post = require('../models/post');
 
 exports.likes_get = [
-  passport.authenticate('jwt', { session: false }),
   param('postid', 'Post id must be valid')
     .trim()
     .custom((value) => mongoose.Types.ObjectId.isValid(value))
