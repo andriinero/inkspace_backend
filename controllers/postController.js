@@ -39,7 +39,7 @@ exports.posts_get = [
     })
     .escape(),
   query('topic', 'Topic must be valid')
-    .default('')
+    .optional()
     .trim()
     .escape()
     .customSanitizer(async (value) => {
@@ -48,17 +48,23 @@ exports.posts_get = [
       if (topicByName) return topicByName._id.toString();
       if (mongoose.Types.ObjectId.isValid(value)) return value;
     }),
+  query('userid', 'User id must be valid')
+    .optional()
+    .trim()
+    .custom((value) => mongoose.Types.ObjectId.isValid(value))
+    .escape(),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
       res.status(400).json({ errors: errors.array() });
     } else {
-      const { page, limit, topic } = req.query;
+      const { page, limit, topic, userid } = req.query;
 
       const queryOpts = {};
 
       if (topic) queryOpts['topic'] = topic;
+      if (userid) queryOpts['author'] = userid;
 
       const allPosts = await Post.find(queryOpts)
         .skip(page * MAX_DOCS_PER_FETCH)

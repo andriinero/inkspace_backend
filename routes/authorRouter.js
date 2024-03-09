@@ -7,4 +7,6 @@ const authorController = require('../controllers/authorController');
 
 router.get('/', authorController.authors_get);
 
+router.get('/:userid', authorController.author_get);
+
 module.exports = router;

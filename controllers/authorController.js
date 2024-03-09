@@ -1,5 +1,6 @@
+const mongoose = require('mongoose');
 const asyncHandler = require('express-async-handler');
-const { query, validationResult } = require('express-validator');
+const { query, param, validationResult } = require('express-validator');
 
 const User = require('../models/user');
 
@@ -49,6 +50,33 @@ exports.authors_get = [
         .exec();
 
       res.json(users);
+    }
+  }),
+];
+
+exports.author_get = [
+  param('userid', 'User id must be valid')
+    .trim()
+    .custom((value) => mongoose.Types.ObjectId.isValid(value))
+    .escape(),
+  asyncHandler(async (req, res) => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      res.status(400).json({ errors: errors.array() });
+    } else {
+      const userById = await User.findById(
+        req.params.userid,
+        'username bio followed_users'
+      ).exec();
+
+      if (!userById) {
+        res.sendStatus(404);
+      } else {
+        await userById.populate({ path: 'followed_users' });
+
+        res.json(userById);
+      }
     }
   }),
 ];
