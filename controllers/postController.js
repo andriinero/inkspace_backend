@@ -113,15 +113,16 @@ exports.post_post = [
     .isLength({ min: 100, max: 10000 }),
   body('topic', 'Topic must be valid')
     .trim()
-    .custom(async (value) => {
-      const isValid = mongoose.Types.ObjectId.isValid(value);
+    .customSanitizer(async (value) => {
+      const topic = await Topic.findOne({ name: value }).exec();
 
-      if (!isValid) {
-        throw new Error('Invalid topic id');
+      if (!topic) {
+        const topic = new Topic({ name: value });
+        const savedTopic = await topic.save();
+
+        return savedTopic._id;
       } else {
-        const topic = await Topic.findOne({ _id: value }).exec();
-
-        if (!topic) throw new Error('Invalid topic');
+        return topic._id;
       }
     })
     .escape(),
