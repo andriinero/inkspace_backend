@@ -35,19 +35,32 @@ exports.authors_get = [
       }
     })
     .escape(),
-  asyncHandler(async (req, res, next) => {
+  query('random', 'Random must have valid format')
+    .trim()
+    .optional()
+    .isInt({ min: 1 })
+    .escape(),
+  asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
       res.status(400).json(errors.array());
     } else {
-      const { limit, page } = req.query;
+      const { limit, page, random } = req.query;
 
-      const users = await User.find({}, 'username bio')
-        .skip(page * MAX_DOCS_PER_FETCH)
-        .limit(limit)
-        .sort({ sign_up_date: -1 })
-        .exec();
+      let users = null;
+
+      if (random) {
+        users = await User.aggregate([{ $sample: { size: +random } }])
+          .project('username bio')
+          .exec();
+      } else {
+        users = await User.find({}, 'username bio')
+          .skip(page * MAX_DOCS_PER_FETCH)
+          .limit(limit)
+          .sort({ sign_up_date: -1 })
+          .exec();
+      }
 
       res.json(users);
     }
@@ -67,7 +80,7 @@ exports.author_get = [
     } else {
       const userById = await User.findById(
         req.params.userid,
-        'username bio followed_users'
+        'username bio followed_users sign_up_date'
       ).exec();
 
       if (!userById) {

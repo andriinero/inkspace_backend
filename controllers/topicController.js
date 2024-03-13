@@ -38,18 +38,29 @@ exports.topics_get = [
       }
     })
     .escape(),
+  query('random', 'Random must have valid format')
+    .trim()
+    .optional()
+    .isInt({ min: 1 })
+    .escape(),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
       res.send(400).json({ errors: errors.array() });
     } else {
-      const { limit, page } = req.query;
+      const { limit, page, random } = req.query;
 
-      const topics = await Topic.find({}, 'name')
-        .skip(page * MAX_DOCS_PER_FETCH)
-        .limit(limit)
-        .exec();
+      let topics = null;
+
+      if (random) {
+        topics = await Topic.aggregate([{ $sample: { size: +random } }]);
+      } else {
+        topics = await Topic.find({}, 'name')
+          .skip(page * MAX_DOCS_PER_FETCH)
+          .limit(limit)
+          .exec();
+      }
 
       res.json(topics);
     }

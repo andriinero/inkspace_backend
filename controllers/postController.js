@@ -48,11 +48,6 @@ exports.posts_get = [
       if (topicByName) return topicByName._id.toString();
       if (mongoose.Types.ObjectId.isValid(value)) return value;
     }),
-  query('userid', 'User id must be valid')
-    .optional()
-    .trim()
-    .custom((value) => mongoose.Types.ObjectId.isValid(value))
-    .escape(),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
