@@ -6,79 +6,74 @@ const passport = require('passport');
 const Post = require('../models/post');
 const User = require('../models/user');
 const Topic = require('../models/topic');
+const {
+  limitQuerySanitizer,
+  pageQuerySanitizer,
+  topicNameQuerySanitizer,
+  isDbIdValid,
+} = require('../middlewares/validation');
 
 require('dotenv').config();
 
-const MAX_DOCS_PER_FETCH = process.env.MAX_DOCS_PER_FETCH;
+const MAX_DOCS_PER_FETCH = parseInt(process.env.MAX_DOCS_PER_FETCH, 10);
 
 exports.posts_get = [
   query('limit', 'Limit query must have valid format')
-    .default(+MAX_DOCS_PER_FETCH)
+    .default(MAX_DOCS_PER_FETCH)
     .trim()
     .isInt()
-    .customSanitizer((value) => {
-      if (value < 0 || value > 20) {
-        return 0;
-      } else {
-        return value;
-      }
-    })
+    .customSanitizer(limitQuerySanitizer)
     .escape(),
   query('page', 'Page query must have valid format')
     .default(1)
     .trim()
     .isInt()
-    .customSanitizer(async (value) => {
-      const docCount = await Post.countDocuments().exec();
-
-      if (value < 0 || value > Math.ceil(docCount / MAX_DOCS_PER_FETCH)) {
-        return 0;
-      } else {
-        return --value;
-      }
-    })
+    .customSanitizer(pageQuerySanitizer)
     .escape(),
   query('topic', 'Topic must be valid')
     .optional()
     .trim()
     .escape()
-    .customSanitizer(async (value) => {
-      const topicByName = await Topic.findOne({ name: value }).exec();
-
-      if (topicByName) return topicByName._id.toString();
-      if (mongoose.Types.ObjectId.isValid(value)) return value;
-    }),
+    .customSanitizer(topicNameQuerySanitizer(Topic)),
+  query('random', 'Random must have valid format')
+    .trim()
+    .optional()
+    .isInt({ min: 1 })
+    .escape(),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
       res.status(400).json({ errors: errors.array() });
     } else {
-      const { page, limit, topic, userid } = req.query;
+      const { page, limit, topic, userid, random } = req.query;
 
-      const queryOpts = {};
+      let posts = [];
 
-      if (topic) queryOpts['topic'] = topic;
-      if (userid) queryOpts['author'] = userid;
+      if (random) {
+        posts = await Post.aggregate([{ $sample: { size: +random } }]).exec();
+      } else {
+        const queryOpts = {};
 
-      const allPosts = await Post.find(queryOpts)
-        .skip(page * MAX_DOCS_PER_FETCH)
-        .limit(limit)
-        .populate('author', 'username email')
-        .populate('topic', 'name')
-        .sort({ date: -1 })
-        .exec();
+        if (topic) queryOpts['topic'] = topic;
+        if (userid) queryOpts['author'] = userid;
 
-      res.json(allPosts);
+        posts = await Post.find(queryOpts)
+          .skip(page * MAX_DOCS_PER_FETCH)
+          .limit(limit)
+          .populate('author', 'username email')
+          .populate('topic', 'name')
+          .sort({ date: -1 })
+          .exec();
+      }
+
+      res.json(posts);
     }
   }),
 ];
 
 exports.post_get = [
-  param('postid', 'Post id must be valid')
-    .trim()
-    .custom((value) => mongoose.Types.ObjectId.isValid(value))
-    .escape(),
+  param('postid', 'Post id must be valid').trim().custom(isDbIdValid).escape(),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
@@ -152,7 +147,7 @@ exports.post_put = [
   passport.authenticate('jwt', { session: false }),
   param('postid', 'Post id must be valid')
     .trim()
-    .custom((value) => mongoose.Types.ObjectId.isValid(value))
+    .custom(isDbIdValid)
     .escape(),
   body('title', 'Title must have correct length')
     .optional()
@@ -214,7 +209,7 @@ exports.post_delete = [
   passport.authenticate('jwt', { session: false }),
   param('postid', 'Post id must be valid')
     .trim()
-    .custom((value) => mongoose.Types.ObjectId.isValid(value))
+    .custom(isDbIdValid)
     .escape(),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);

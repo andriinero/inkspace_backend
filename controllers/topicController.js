@@ -1,42 +1,31 @@
 const asyncHandler = require('express-async-handler');
 const { body, query, validationResult, param } = require('express-validator');
-const mongoose = require('mongoose');
 const passport = require('passport');
 
 const Topic = require('../models/topic');
 const user = require('../models/user');
+const {
+  limitQuerySanitizer,
+  pageQuerySanitizer,
+  isDbIdValid,
+} = require('../middlewares/validation');
 
 require('dotenv').config();
 
-const MAX_DOCS_PER_FETCH = process.env.MAX_DOCS_PER_FETCH;
+const MAX_DOCS_PER_FETCH = parseInt(process.env.MAX_DOCS_PER_FETCH, 10);
 
-// TODO: data manipulation for admin role only
 exports.topics_get = [
   query('limit', 'Limit query must have valid format')
-    .default(+MAX_DOCS_PER_FETCH)
+    .default(MAX_DOCS_PER_FETCH)
     .trim()
     .isInt()
-    .customSanitizer((value) => {
-      if (value < 0 || value > 20) {
-        return 0;
-      } else {
-        return value;
-      }
-    })
+    .customSanitizer(limitQuerySanitizer)
     .escape(),
   query('page', 'Page query must have valid format')
     .default(1)
     .trim()
     .isInt()
-    .customSanitizer(async (value) => {
-      const docCount = await Topic.countDocuments().exec();
-
-      if (value < 0 || value > Math.ceil(docCount / MAX_DOCS_PER_FETCH)) {
-        return 0;
-      } else {
-        return --value;
-      }
-    })
+    .customSanitizer(pageQuerySanitizer)
     .escape(),
   query('random', 'Random must have valid format')
     .trim()
@@ -51,10 +40,10 @@ exports.topics_get = [
     } else {
       const { limit, page, random } = req.query;
 
-      let topics = null;
+      let topics = [];
 
       if (random) {
-        topics = await Topic.aggregate([{ $sample: { size: +random } }]);
+        topics = await Topic.aggregate([{ $sample: { size: +random } }]).exec();
       } else {
         topics = await Topic.find({}, 'name')
           .skip(page * MAX_DOCS_PER_FETCH)
@@ -68,10 +57,7 @@ exports.topics_get = [
 ];
 
 exports.topic_get = [
-  param('topicid', 'Topic id must be valid')
-    .trim()
-    .custom((value) => mongoose.Types.ObjectId.isValid(value))
-    .escape(),
+  param('topicid', 'Topic id must be valid').trim().custom(isDbIdValid).escape(),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
@@ -113,10 +99,7 @@ exports.topic_post = [
 
 exports.topic_put = [
   passport.authenticate('jwt', { session: false }),
-  param('topicid', 'Topic id must have valid format')
-    .trim()
-    .custom((value) => mongoose.Types.ObjectId.isValid(value))
-    .escape(),
+  param('topicid', 'Topic id must have valid format').trim().custom(isDbIdValid).escape(),
   body('name', 'Name must have valid format')
     .trim()
     .isLength({ min: 3, max: 100 })
@@ -149,10 +132,7 @@ exports.topic_put = [
 
 exports.topic_delete = [
   passport.authenticate('jwt', { session: false }),
-  param('topicid', 'Topic id must have valid format')
-    .trim()
-    .custom((value) => mongoose.Types.ObjectId.isValid(value))
-    .escape(),
+  param('topicid', 'Topic id must have valid format').trim().custom(isDbIdValid).escape(),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 

@@ -1,52 +1,33 @@
 const { body, param, query, validationResult } = require('express-validator');
 const asyncHandler = require('express-async-handler');
-const mongoose = require('mongoose');
 const passport = require('passport');
 
 const Comment = require('../models/comment');
 const Post = require('../models/post');
+const {
+  isDbIdValid,
+  limitQuerySanitizer,
+  pageQuerySanitizer,
+} = require('../middlewares/validation');
 
 require('dotenv').config();
 
-const MAX_DOCS_PER_FETCH = process.env.MAX_DOCS_PER_FETCH;
+const MAX_DOCS_PER_FETCH = parseInt(process.env.MAX_DOCS_PER_FETCH, 10);
 
 // FIXME: postid should be query
 exports.comments_get = [
-  param('postid', 'Post id must be valid')
-    .trim()
-    .custom((value) => mongoose.Types.ObjectId.isValid(value))
-    .escape(),
+  param('postid', 'Post id must be valid').trim().custom(isDbIdValid).escape(),
   query('limit', 'Limit query must have valid format')
-    .default(+MAX_DOCS_PER_FETCH)
+    .default(MAX_DOCS_PER_FETCH)
     .trim()
     .isInt()
-    .customSanitizer((value) => {
-      if (value < 0 || value > 20) {
-        return 0;
-      } else {
-        return value;
-      }
-    })
+    .customSanitizer(limitQuerySanitizer)
     .escape(),
   query('page', 'Page query must have valid format')
     .default(1)
     .trim()
     .isInt()
-    .customSanitizer(async (value, { req }) => {
-      const errors = validationResult(req);
-
-      if (!errors.isEmpty()) {
-        throw new Error('An error has occurred during sanitization');
-      } else {
-        const docCount = await Comment.countDocuments({ post: req.params.postid }).exec();
-
-        if (value < 0 || value > Math.ceil(docCount / MAX_DOCS_PER_FETCH)) {
-          return 0;
-        } else {
-          return --value;
-        }
-      }
-    })
+    .customSanitizer(pageQuerySanitizer)
     .escape(),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
@@ -74,10 +55,7 @@ exports.comments_get = [
 ];
 
 exports.comment_get = [
-  param('commentid', 'Comment id must be valid')
-    .trim()
-    .custom((value) => mongoose.Types.ObjectId.isValid(value))
-    .escape(),
+  param('commentid', 'Comment id must be valid').trim().custom(isDbIdValid).escape(),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
@@ -99,10 +77,7 @@ exports.comment_get = [
 
 exports.comment_post = [
   passport.authenticate('jwt', { session: false }),
-  param('postid', 'Post id must be valid')
-    .trim()
-    .custom((value) => mongoose.Types.ObjectId.isValid(value))
-    .escape(),
+  param('postid', 'Post id must be valid').trim().custom(isDbIdValid).escape(),
   body('body', 'Comment body must have correct length')
     .trim()
     .isLength({ min: 10, maxLength: 280 }),
@@ -139,10 +114,7 @@ exports.comment_post = [
 
 exports.comment_put = [
   passport.authenticate('jwt', { session: false }),
-  param('commentid', 'Comment id must be valid')
-    .trim()
-    .custom((value) => mongoose.Types.ObjectId.isValid(value))
-    .escape(),
+  param('commentid', 'Comment id must be valid').trim().custom(isDbIdValid).escape(),
   body('body', 'Comment body must have correct length')
     .optional()
     .trim()
@@ -183,7 +155,7 @@ exports.comment_delete = [
   passport.authenticate('jwt', { session: false }),
   param('commentid', 'Comment id must be valid')
     .trim()
-    .custom((value) => mongoose.Types.ObjectId.isValid(value))
+    .custom(isDbIdValid)
     .escape(),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);

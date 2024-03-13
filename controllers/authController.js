@@ -21,7 +21,6 @@ exports.login_get = [
   }),
 ];
 
-// FIXME: json err objects with messages
 exports.login_post = [
   body('username', 'Invalid username format').notEmpty().trim().escape(),
   body('password', 'Invalid password format').notEmpty().trim().escape(),
@@ -29,7 +28,7 @@ exports.login_post = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ errors: errors.array()});
+      res.status(400).json({ errors: errors.array() });
     } else {
       const userByUsername = await User.findOne({ username: req.body.username }).exec();
 

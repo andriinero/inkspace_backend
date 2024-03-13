@@ -1,39 +1,29 @@
-const mongoose = require('mongoose');
 const asyncHandler = require('express-async-handler');
 const { query, param, validationResult } = require('express-validator');
 
 const User = require('../models/user');
+const {
+  limitQuerySanitizer,
+  pageQuerySanitizer,
+  isDbIdValid,
+} = require('../middlewares/validation');
 
 require('dotenv').config();
 
-const MAX_DOCS_PER_FETCH = process.env.MAX_DOCS_PER_FETCH;
+const MAX_DOCS_PER_FETCH = parseInt(process.env.MAX_DOCS_PER_FETCH, 10);
 
 exports.authors_get = [
   query('limit', 'Limit query must have valid format')
-    .default(+MAX_DOCS_PER_FETCH)
+    .default(MAX_DOCS_PER_FETCH)
     .trim()
     .isInt()
-    .customSanitizer((value) => {
-      if (value < 0 || value > 20) {
-        return 0;
-      } else {
-        return value;
-      }
-    })
+    .customSanitizer(limitQuerySanitizer)
     .escape(),
   query('page', 'Page query must have valid format')
     .default(1)
     .trim()
     .isInt()
-    .customSanitizer(async (value) => {
-      const docCount = await User.countDocuments().exec();
-
-      if (value < 0 || value > Math.ceil(docCount / MAX_DOCS_PER_FETCH)) {
-        return 0;
-      } else {
-        return --value;
-      }
-    })
+    .customSanitizer(pageQuerySanitizer(User))
     .escape(),
   query('random', 'Random must have valid format')
     .trim()
@@ -48,7 +38,7 @@ exports.authors_get = [
     } else {
       const { limit, page, random } = req.query;
 
-      let users = null;
+      let users = [];
 
       if (random) {
         users = await User.aggregate([{ $sample: { size: +random } }])
@@ -68,10 +58,7 @@ exports.authors_get = [
 ];
 
 exports.author_get = [
-  param('userid', 'User id must be valid')
-    .trim()
-    .custom((value) => mongoose.Types.ObjectId.isValid(value))
-    .escape(),
+  param('userid', 'User id must be valid').trim().custom(isDbIdValid).escape(),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 

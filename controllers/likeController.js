@@ -1,16 +1,13 @@
-const mongoose = require('mongoose');
 const { param, validationResult } = require('express-validator');
 const asyncHandler = require('express-async-handler');
 const passport = require('passport');
 
 const Post = require('../models/post');
+const { isDbIdValid } = require('../middlewares/validation');
 
 exports.likes_get = [
-  param('postid', 'Post id must be valid')
-    .trim()
-    .custom((value) => mongoose.Types.ObjectId.isValid(value))
-    .escape(),
-  asyncHandler(async (req, res, next) => {
+  param('postid', 'Post id must be valid').trim().custom(isDbIdValid).escape(),
+  asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -29,8 +26,8 @@ exports.likes_get = [
 
 exports.likes_put = [
   passport.authenticate('jwt', { session: false }),
-  param('postid', 'Post id must be valid'),
-  asyncHandler(async (req, res, next) => {
+  param('postid', 'Post id must be valid').trim().custom(isDbIdValid).escape(),
+  asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {

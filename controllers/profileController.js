@@ -6,10 +6,15 @@ const passport = require('passport');
 const User = require('../models/user');
 const Post = require('../models/post');
 const Topic = require('../models/topic');
+const {
+  limitQuerySanitizer,
+  pageQuerySanitizer,
+  isDbIdValid,
+} = require('../middlewares/validation');
 
 require('dotenv').config();
 
-const MAX_DOCS_PER_FETCH = process.env.MAX_DOCS_PER_FETCH;
+const MAX_DOCS_PER_FETCH = parseInt(process.env.MAX_DOCS_PER_FETCH, 10);
 
 exports.profile_get = [
   passport.authenticate('jwt', { session: false }),
@@ -94,30 +99,16 @@ exports.bio_put = [
 exports.bookmarks_get = [
   passport.authenticate('jwt', { session: false }),
   query('limit', 'Limit query must have valid format')
-    .default(+MAX_DOCS_PER_FETCH)
+    .default(MAX_DOCS_PER_FETCH)
     .trim()
     .isInt()
-    .customSanitizer((value) => {
-      if (value < 0 || value > 20) {
-        return 0;
-      } else {
-        return value;
-      }
-    })
+    .customSanitizer(limitQuerySanitizer)
     .escape(),
   query('page', 'Page query must have valid format')
     .default(1)
     .trim()
     .isInt()
-    .customSanitizer(async (value) => {
-      const docCount = await Post.countDocuments().exec();
-
-      if (value < 0 || value > Math.ceil(docCount / MAX_DOCS_PER_FETCH)) {
-        return 0;
-      } else {
-        return --value;
-      }
-    })
+    .customSanitizer(pageQuerySanitizer)
     .escape(),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
@@ -152,7 +143,7 @@ exports.bookmark_post = [
   passport.authenticate('jwt', { session: false }),
   body('postid', 'Bookmark id must be valid')
     .trim()
-    .custom((value) => mongoose.Types.ObjectId.isValid(value))
+    .custom(isDbIdValid)
     .custom(async (value) => {
       const postById = await Post.findById(value).exec();
 
@@ -189,7 +180,7 @@ exports.bookmark_delete = [
   passport.authenticate('jwt', { session: false }),
   param('postid', 'Post id must be valid')
     .trim()
-    .custom((value) => mongoose.Types.ObjectId.isValid(value))
+    .custom(isDbIdValid)
     .custom(async (value) => {
       const postById = await Post.findById(value).exec();
 
@@ -229,30 +220,16 @@ exports.bookmark_delete = [
 exports.ignored_posts_get = [
   passport.authenticate('jwt', { session: false }),
   query('limit', 'Limit query must have valid format')
-    .default(+MAX_DOCS_PER_FETCH)
+    .default(MAX_DOCS_PER_FETCH)
     .trim()
     .isInt()
-    .customSanitizer((value) => {
-      if (value < 0 || value > 20) {
-        return 0;
-      } else {
-        return value;
-      }
-    })
+    .customSanitizer(limitQuerySanitizer)
     .escape(),
   query('page', 'Page query must have valid format')
     .default(1)
     .trim()
     .isInt()
-    .customSanitizer(async (value) => {
-      const docCount = await Post.countDocuments().exec();
-
-      if (value < 0 || value > Math.ceil(docCount / MAX_DOCS_PER_FETCH)) {
-        return 0;
-      } else {
-        return --value;
-      }
-    })
+    .customSanitizer(pageQuerySanitizer)
     .escape(),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
@@ -286,7 +263,7 @@ exports.ignored_post_post = [
   passport.authenticate('jwt', { session: false }),
   body('postid', 'Post id must be valid')
     .trim()
-    .custom((value) => mongoose.Types.ObjectId.isValid(value))
+    .custom(isDbIdValid)
     .custom(async (value) => {
       const postById = await Post.findById(value).exec();
 
@@ -323,7 +300,7 @@ exports.ignored_post_delete = [
   passport.authenticate('jwt', { session: false }),
   param('postid', 'Post id must be valid')
     .trim()
-    .custom((value) => mongoose.Types.ObjectId.isValid(value))
+    .custom(isDbIdValid)
     .custom(async (value) => {
       const postById = await Post.findById(value).exec();
 
@@ -363,30 +340,16 @@ exports.ignored_post_delete = [
 exports.ignored_topics_get = [
   passport.authenticate('jwt', { session: false }),
   query('limit', 'Limit query must have valid format')
-    .default(+MAX_DOCS_PER_FETCH)
+    .default(MAX_DOCS_PER_FETCH)
     .trim()
     .isInt()
-    .customSanitizer((value) => {
-      if (value < 0 || value > 20) {
-        return 0;
-      } else {
-        return value;
-      }
-    })
+    .customSanitizer(limitQuerySanitizer)
     .escape(),
   query('page', 'Page query must have valid format')
     .default(1)
     .trim()
     .isInt()
-    .customSanitizer(async (value) => {
-      const docCount = await Post.countDocuments().exec();
-
-      if (value < 0 || value > Math.ceil(docCount / MAX_DOCS_PER_FETCH)) {
-        return 0;
-      } else {
-        return --value;
-      }
-    })
+    .customSanitizer(pageQuerySanitizer)
     .escape(),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
@@ -420,7 +383,7 @@ exports.ignored_topic_post = [
   passport.authenticate('jwt', { session: false }),
   body('topicid', 'Topic id must be valid')
     .trim()
-    .custom((value) => mongoose.Types.ObjectId.isValid(value))
+    .custom(isDbIdValid)
     .custom(async (value) => {
       const topicById = await Topic.findById(value).exec();
 
@@ -457,7 +420,7 @@ exports.ignored_topic_delete = [
   passport.authenticate('jwt', { session: false }),
   param('topicid', 'Topic id must be valid')
     .trim()
-    .custom((value) => mongoose.Types.ObjectId.isValid(value))
+    .custom(isDbIdValid)
     .custom(async (value) => {
       const topicById = await Topic.findById(value).exec();
 
@@ -497,30 +460,16 @@ exports.ignored_topic_delete = [
 exports.followed_users_get = [
   passport.authenticate('jwt', { session: false }),
   query('limit', 'Limit query must have valid format')
-    .default(+MAX_DOCS_PER_FETCH)
+    .default(MAX_DOCS_PER_FETCH)
     .trim()
     .isInt()
-    .customSanitizer((value) => {
-      if (value < 0 || value > 20) {
-        return 0;
-      } else {
-        return value;
-      }
-    })
+    .customSanitizer(limitQuerySanitizer)
     .escape(),
   query('page', 'Page query must have valid format')
     .default(1)
     .trim()
     .isInt()
-    .customSanitizer(async (value) => {
-      const docCount = await Post.countDocuments().exec();
-
-      if (value < 0 || value > Math.ceil(docCount / MAX_DOCS_PER_FETCH)) {
-        return 0;
-      } else {
-        return --value;
-      }
-    })
+    .customSanitizer(pageQuerySanitizer)
     .escape(),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
@@ -554,7 +503,7 @@ exports.followed_user_post = [
   passport.authenticate('jwt', { session: false }),
   body('userid', 'User id must be valid')
     .trim()
-    .custom((value) => mongoose.Types.ObjectId.isValid(value))
+    .custom(isDbIdValid)
     .custom(async (value) => {
       const userById = await User.findById(value).exec();
 
@@ -591,7 +540,7 @@ exports.followed_user_delete = [
   passport.authenticate('jwt', { session: false }),
   param('userid', 'User id must be valid')
     .trim()
-    .custom((value) => mongoose.Types.ObjectId.isValid(value))
+    .custom(isDbIdValid)
     .custom(async (value) => {
       const userById = await User.findById(value).exec();
 
