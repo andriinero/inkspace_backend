@@ -28,7 +28,7 @@ exports.posts_get = [
     .default(1)
     .trim()
     .isInt()
-    .customSanitizer(pageQuerySanitizer)
+    .customSanitizer(pageQuerySanitizer(Post))
     .escape(),
   query('topic', 'Topic must be valid')
     .optional()
@@ -51,7 +51,31 @@ exports.posts_get = [
       let posts = [];
 
       if (random) {
-        posts = await Post.aggregate([{ $sample: { size: +random } }]).exec();
+        posts = await Post.aggregate([
+          { $sample: { size: +random } },
+          { $limit: +limit },
+          { $skip: page * MAX_DOCS_PER_FETCH },
+          {
+            $lookup: {
+              from: User.collection.name,
+              localField: 'author',
+              foreignField: '_id',
+              pipeline: [{ $project: { username: 1, email: 1 } }],
+              as: 'author',
+            },
+          },
+          { $unwind: '$author' },
+          {
+            $lookup: {
+              from: Topic.collection.name,
+              localField: 'topic',
+              foreignField: '_id',
+              pipeline: [{ $project: { name: 1 } }],
+              as: 'topic',
+            },
+          },
+          { $unwind: '$topic' },
+        ]).exec();
       } else {
         const queryOpts = {};
 
@@ -145,10 +169,7 @@ exports.post_post = [
 
 exports.post_put = [
   passport.authenticate('jwt', { session: false }),
-  param('postid', 'Post id must be valid')
-    .trim()
-    .custom(isDbIdValid)
-    .escape(),
+  param('postid', 'Post id must be valid').trim().custom(isDbIdValid).escape(),
   body('title', 'Title must have correct length')
     .optional()
     .trim()
@@ -207,10 +228,7 @@ exports.post_put = [
 
 exports.post_delete = [
   passport.authenticate('jwt', { session: false }),
-  param('postid', 'Post id must be valid')
-    .trim()
-    .custom(isDbIdValid)
-    .escape(),
+  param('postid', 'Post id must be valid').trim().custom(isDbIdValid).escape(),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
