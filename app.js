@@ -24,6 +24,7 @@ const authorRouter = require('./routes/authorRouter');
 const topicRouter = require('./routes/topicRouter');
 const profileRouter = require('./routes/profileRouter');
 const authRouter = require('./routes/authRouter');
+const imageRouter = require('./routes/imageRouter');
 
 const app = express();
 
@@ -64,5 +65,6 @@ app.use('/api/authors', authorRouter);
 app.use('/api/topics', topicRouter);
 app.use('/api/profile', profileRouter);
 app.use('/auth', authRouter);
+app.use('/api/images', imageRouter);
 
 module.exports = app;
