@@ -10,6 +10,8 @@ let gridFSBucket = new GridFSBucket(mongoose.connection, { bucketName: 'images' 
 exports.image_get = asyncHandler(async (req, res) => {
   let chunks = [];
 
+  const image = await Image.findById(req.params.imageid).exec();
+
   const downloadStream = gridFSBucket.openDownloadStream(
     new mongoose.Types.ObjectId(req.params.imageid)
   );
@@ -23,7 +25,10 @@ exports.image_get = asyncHandler(async (req, res) => {
   });
 
   downloadStream.on('end', () => {
-    res.json({ imgURL: `data:image;base64,${Buffer.concat(chunks).toString('base64')}` });
+    res.json({
+      meta: image,
+      imgURL: `data:image;base64,${Buffer.concat(chunks).toString('base64')}`,
+    });
   });
 });
 
