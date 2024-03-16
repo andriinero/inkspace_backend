@@ -13,6 +13,7 @@ const UserSchema = new Schema({
   ignored_posts: [{ type: Schema.Types.ObjectId, required: true, ref: 'Post' }],
   ignored_topics: [{ type: Schema.Types.ObjectId, required: true, ref: 'Topic' }],
   followed_users: [{ type: Schema.Types.ObjectId, required: true, ref: 'User' }],
+  profile_image: { type: Schema.Types.ObjectId, required: true, ref: '' },
 });
 
 UserSchema.virtual('url').get(function () {

@@ -3,14 +3,14 @@ const router = express.Router();
 
 const imageController = require('../controllers/imageController');
 
-router.get('/:', imageController.images_get);
+router.get('/');
 
-router.get('/:pathname');
+router.get('/:imageid', imageController.image_get);
 
 router.post('/', imageController.image_post);
 
-router.put('/:pathname');
+router.put('/:imageid');
 
-router.delete('/:pathname');
+router.delete('/:imageid');
 
 module.exports = router;
