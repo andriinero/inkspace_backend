@@ -41,7 +41,12 @@ exports.authors_get = [
       let users = [];
 
       if (random) {
-        users = await User.aggregate([{ $sample: { size: +random } }])
+        users = await User.aggregate([
+          { $sample: { size: +random } },
+          { $skip: page * MAX_DOCS_PER_FETCH },
+          { $limit: +limit },
+          { $sort: { sign_up_date: -1 } },
+        ])
           .project('username bio followed_users sign_up_date profile_image')
           .exec();
       } else {
@@ -76,8 +81,6 @@ exports.author_get = [
       if (!userById) {
         res.sendStatus(404);
       } else {
-        await userById.populate({ path: 'followed_users' });
-
         res.json(userById);
       }
     }

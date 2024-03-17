@@ -45,8 +45,6 @@ exports.login_post = [
           const jwtPayload = {
             sub: userByUsername._id,
             username: userByUsername.username,
-            email: userByUsername.email,
-            role: userByUsername.role,
           };
 
           const token = jwt.sign(jwtPayload, SECRET_KEY, opts);
@@ -115,7 +113,7 @@ exports.signup_post = [
 
       await newUser.save();
 
-      res.sendStatus(200);
+      res.sendStatus({ message: 'User created successfully', _id: newUser._id.toString() });
     }
   }),
 ];

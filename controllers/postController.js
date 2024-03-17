@@ -60,7 +60,7 @@ exports.posts_get = [
               from: User.collection.name,
               localField: 'author',
               foreignField: '_id',
-              pipeline: [{ $project: { username: 1, email: 1, profile_image: 1 } }],
+              pipeline: [{ $project: { username: 1, profile_image: 1 } }],
               as: 'author',
             },
           },
@@ -75,17 +75,22 @@ exports.posts_get = [
             },
           },
           { $unwind: '$topic' },
-        ]).exec();
+        ])
+          .project('author title body date topic like_count thumbnail_image')
+          .exec();
       } else {
         const queryOpts = {};
 
         if (topic) queryOpts['topic'] = topic;
         if (userid) queryOpts['author'] = userid;
 
-        posts = await Post.find(queryOpts)
+        posts = await Post.find(
+          queryOpts,
+          'author title body date topic like_count thumbnail_image'
+        )
           .skip(page * MAX_DOCS_PER_FETCH)
           .limit(limit)
-          .populate('author', 'username email profile_image')
+          .populate('author', 'username profile_image')
           .populate('topic', 'name')
           .sort({ date: -1 })
           .exec();
@@ -104,9 +109,19 @@ exports.post_get = [
     if (!errors.isEmpty()) {
       res.status(400).json({ errors: errors.array() });
     } else {
-      const post = await Post.findById(req.params.postid)
-        .populate('author', 'username email profile_image')
-        .populate({ path: 'comments', populate: { path: 'author', model: 'User', select: 'username email profile_image' } })
+      const post = await Post.findById(
+        req.params.postid,
+        'author title body date topic like_count thumbnail_image'
+      )
+        .populate('author', 'username profile_image')
+        .populate({
+          path: 'comments',
+          populate: {
+            path: 'author',
+            model: 'User',
+            select: 'username profile_image',
+          },
+        })
         .populate('topic', 'name')
         .exec();
 
@@ -162,7 +177,7 @@ exports.post_post = [
       user.user_posts.push(savedPost);
       await user.save();
 
-      res.json(savedPost);
+      res.json({ _id: savedPost._id.toString() });
     }
   }),
 ];
@@ -217,7 +232,7 @@ exports.post_put = [
             req.params.postid,
             postDetail,
             { new: true, runValidators: true }
-          );
+          ).projection('author title date topic thumbnail_image');
 
           res.json(updatedPost);
         }
@@ -245,7 +260,7 @@ exports.post_delete = [
         } else {
           const deletedPost = await postById.deleteOne();
 
-          res.json(deletedPost);
+          res.json({ _id: postById._id.toString() });
         }
       }
     }

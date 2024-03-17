@@ -1,14 +1,14 @@
 const asyncHandler = require('express-async-handler');
 const { body, query, validationResult, param } = require('express-validator');
 const passport = require('passport');
-
-const Topic = require('../models/topic');
-const user = require('../models/user');
 const {
   limitQuerySanitizer,
   pageQuerySanitizer,
   isDbIdValid,
 } = require('../middlewares/validation');
+
+const Topic = require('../models/topic');
+const User = require('../models/user');
 
 require('dotenv').config();
 
@@ -144,7 +144,7 @@ exports.topic_delete = [
       if (!deletedTopic) {
         res.sendStatus(400);
       } else {
-        res.json(deletedTopic);
+        res.json({ _id: deletedTopic._id.toString() });
       }
     }
   }),

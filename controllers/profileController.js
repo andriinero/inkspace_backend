@@ -133,7 +133,7 @@ exports.bookmarks_get = [
       if (!userById) {
         res.sendStatus(404);
       } else {
-        res.send(userById);
+        res.send(userById.post_bookmarks);
       }
     }
   }),
