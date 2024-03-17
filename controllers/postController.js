@@ -60,7 +60,7 @@ exports.posts_get = [
               from: User.collection.name,
               localField: 'author',
               foreignField: '_id',
-              pipeline: [{ $project: { username: 1, email: 1 } }],
+              pipeline: [{ $project: { username: 1, email: 1, profile_image: 1 } }],
               as: 'author',
             },
           },
@@ -85,7 +85,7 @@ exports.posts_get = [
         posts = await Post.find(queryOpts)
           .skip(page * MAX_DOCS_PER_FETCH)
           .limit(limit)
-          .populate('author', 'username email')
+          .populate('author', 'username email profile_image')
           .populate('topic', 'name')
           .sort({ date: -1 })
           .exec();
@@ -105,8 +105,8 @@ exports.post_get = [
       res.status(400).json({ errors: errors.array() });
     } else {
       const post = await Post.findById(req.params.postid)
-        .populate('author', 'username email')
-        .populate({ path: 'comments', populate: { path: 'author', model: 'User' } })
+        .populate('author', 'username email profile_image')
+        .populate({ path: 'comments', populate: { path: 'author', model: 'User', select: 'username email profile_image' } })
         .populate('topic', 'name')
         .exec();
 

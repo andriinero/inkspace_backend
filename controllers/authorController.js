@@ -42,10 +42,13 @@ exports.authors_get = [
 
       if (random) {
         users = await User.aggregate([{ $sample: { size: +random } }])
-          .project('username bio')
+          .project('username bio followed_users sign_up_date profile_image')
           .exec();
       } else {
-        users = await User.find({}, 'username bio')
+        users = await User.find(
+          {},
+          'username bio followed_users sign_up_date profile_image'
+        )
           .skip(page * MAX_DOCS_PER_FETCH)
           .limit(limit)
           .sort({ sign_up_date: -1 })
@@ -67,7 +70,7 @@ exports.author_get = [
     } else {
       const userById = await User.findById(
         req.params.userid,
-        'username bio followed_users sign_up_date'
+        'username bio followed_users sign_up_date profile_image'
       ).exec();
 
       if (!userById) {

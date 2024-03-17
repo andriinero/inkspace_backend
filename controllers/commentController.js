@@ -41,7 +41,7 @@ exports.comments_get = [
       const allCommentsByPost = await Comment.find({ post: req.params.postid })
         .skip(page * MAX_DOCS_PER_FETCH)
         .limit(limit)
-        .populate('author', 'username role')
+        .populate('author', 'username role profile_image')
         .sort({ date: -1 })
         .exec();
 
@@ -63,7 +63,7 @@ exports.comment_get = [
       res.status(400).json({ errors: errors.array() });
     } else {
       const comment = await Comment.findById(req.params.commentid)
-        .populate('author', 'username role')
+        .populate('author', 'username role profile_image')
         .exec();
 
       if (!comment) {

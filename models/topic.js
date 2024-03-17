@@ -3,6 +3,7 @@ const Schema = mongoose.Schema;
 
 const TopicSchema = new Schema({
   name: { type: String, required: true, minLength: 3, maxLength: 100 },
+  __v: { type: Number, select: false },
 });
 
 TopicSchema.virtual('url').get(function () {

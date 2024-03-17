@@ -14,6 +14,7 @@ const UserSchema = new Schema({
   ignored_topics: [{ type: Schema.Types.ObjectId, required: true, ref: 'Topic' }],
   followed_users: [{ type: Schema.Types.ObjectId, required: true, ref: 'User' }],
   profile_image: { type: Schema.Types.ObjectId, required: true, ref: 'Image' },
+  __v: { type: Number, select: false },
 });
 
 UserSchema.virtual('url').get(function () {

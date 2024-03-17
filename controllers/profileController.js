@@ -126,7 +126,7 @@ exports.bookmarks_get = [
             limit,
             skip: page * MAX_DOCS_PER_FETCH,
           },
-          populate: { path: 'topic author', select: 'username email name' },
+          populate: { path: 'topic author', select: 'username email profile_image name' },
         })
         .exec();
 
