@@ -1,14 +1,12 @@
-const { body, param, query, validationResult } = require('express-validator');
-const asyncHandler = require('express-async-handler');
 const passport = require('passport');
+const asyncHandler = require('express-async-handler');
+const { body, param, validationResult } = require('express-validator');
+
+const { isDbIdValid } = require('../utils/validation');
+const { generalResourceQueries } = require('../middlewares/queryValidators');
 
 const Comment = require('../models/comment');
 const Post = require('../models/post');
-const {
-  isDbIdValid,
-  limitQuerySanitizer,
-  pageQuerySanitizer,
-} = require('../middlewares/validation');
 
 require('dotenv').config();
 
@@ -16,18 +14,7 @@ const MAX_DOCS_PER_FETCH = parseInt(process.env.MAX_DOCS_PER_FETCH, 10);
 
 exports.comments_get = [
   param('postid', 'Post id must be valid').trim().custom(isDbIdValid).escape(),
-  query('limit', 'Limit query must have valid format')
-    .default(MAX_DOCS_PER_FETCH)
-    .trim()
-    .isInt()
-    .customSanitizer(limitQuerySanitizer)
-    .escape(),
-  query('page', 'Page query must have valid format')
-    .default(1)
-    .trim()
-    .isInt()
-    .customSanitizer(pageQuerySanitizer)
-    .escape(),
+  generalResourceQueries(MAX_DOCS_PER_FETCH),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
@@ -184,7 +171,7 @@ exports.comment_delete = [
             await postById.save();
           }
 
-          res.json({_id: commentById._id.toString()});
+          res.json({ _id: commentById._id.toString() });
         }
       }
     }

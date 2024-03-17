@@ -1,30 +1,17 @@
 const asyncHandler = require('express-async-handler');
 const { query, param, validationResult } = require('express-validator');
 
+const { isDbIdValid } = require('../utils/validation');
+const { generalResourceQueries } = require('../middlewares/queryValidators');
+
 const User = require('../models/user');
-const {
-  limitQuerySanitizer,
-  pageQuerySanitizer,
-  isDbIdValid,
-} = require('../middlewares/validation');
 
 require('dotenv').config();
 
 const MAX_DOCS_PER_FETCH = parseInt(process.env.MAX_DOCS_PER_FETCH, 10);
 
 exports.authors_get = [
-  query('limit', 'Limit query must have valid format')
-    .default(MAX_DOCS_PER_FETCH)
-    .trim()
-    .isInt()
-    .customSanitizer(limitQuerySanitizer)
-    .escape(),
-  query('page', 'Page query must have valid format')
-    .default(1)
-    .trim()
-    .isInt()
-    .customSanitizer(pageQuerySanitizer(User))
-    .escape(),
+  generalResourceQueries(MAX_DOCS_PER_FETCH),
   query('random', 'Random must have valid format')
     .trim()
     .optional()

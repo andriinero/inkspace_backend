@@ -1,11 +1,9 @@
+const passport = require('passport');
 const asyncHandler = require('express-async-handler');
 const { body, query, validationResult, param } = require('express-validator');
-const passport = require('passport');
-const {
-  limitQuerySanitizer,
-  pageQuerySanitizer,
-  isDbIdValid,
-} = require('../middlewares/validation');
+
+const { isDbIdValid } = require('../utils/validation');
+const { generalResourceQueries } = require('../middlewares/queryValidators');
 
 const Topic = require('../models/topic');
 const User = require('../models/user');
@@ -15,18 +13,7 @@ require('dotenv').config();
 const MAX_DOCS_PER_FETCH = parseInt(process.env.MAX_DOCS_PER_FETCH, 10);
 
 exports.topics_get = [
-  query('limit', 'Limit query must have valid format')
-    .default(MAX_DOCS_PER_FETCH)
-    .trim()
-    .isInt()
-    .customSanitizer(limitQuerySanitizer)
-    .escape(),
-  query('page', 'Page query must have valid format')
-    .default(1)
-    .trim()
-    .isInt()
-    .customSanitizer(pageQuerySanitizer)
-    .escape(),
+  generalResourceQueries(MAX_DOCS_PER_FETCH),
   query('random', 'Random must have valid format')
     .trim()
     .optional()

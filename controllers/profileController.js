@@ -1,16 +1,13 @@
-const asyncHandler = require('express-async-handler');
-const { body, param, query, validationResult } = require('express-validator');
-const mongoose = require('mongoose');
 const passport = require('passport');
+const asyncHandler = require('express-async-handler');
+const { body, param, validationResult } = require('express-validator');
 
 const User = require('../models/user');
 const Post = require('../models/post');
 const Topic = require('../models/topic');
-const {
-  limitQuerySanitizer,
-  pageQuerySanitizer,
-  isDbIdValid,
-} = require('../middlewares/validation');
+
+const { isDbIdValid } = require('../utils/validation');
+const { generalResourceQueries } = require('../middlewares/queryValidators');
 
 require('dotenv').config();
 
@@ -28,6 +25,8 @@ exports.profile_get = [
     }
   }),
 ];
+
+// #region BIO //
 
 exports.bio_get = [
   passport.authenticate('jwt', { session: false }),
@@ -96,20 +95,13 @@ exports.bio_put = [
   }),
 ];
 
+// #endregion
+
+// #region BOOKMARKS //
+
 exports.bookmarks_get = [
   passport.authenticate('jwt', { session: false }),
-  query('limit', 'Limit query must have valid format')
-    .default(MAX_DOCS_PER_FETCH)
-    .trim()
-    .isInt()
-    .customSanitizer(limitQuerySanitizer)
-    .escape(),
-  query('page', 'Page query must have valid format')
-    .default(1)
-    .trim()
-    .isInt()
-    .customSanitizer(pageQuerySanitizer)
-    .escape(),
+  generalResourceQueries(MAX_DOCS_PER_FETCH),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
@@ -217,20 +209,13 @@ exports.bookmark_delete = [
   }),
 ];
 
+// #endregion
+
+// #region IGNORED POSTS
+
 exports.ignored_posts_get = [
   passport.authenticate('jwt', { session: false }),
-  query('limit', 'Limit query must have valid format')
-    .default(MAX_DOCS_PER_FETCH)
-    .trim()
-    .isInt()
-    .customSanitizer(limitQuerySanitizer)
-    .escape(),
-  query('page', 'Page query must have valid format')
-    .default(1)
-    .trim()
-    .isInt()
-    .customSanitizer(pageQuerySanitizer)
-    .escape(),
+  generalResourceQueries(MAX_DOCS_PER_FETCH),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
@@ -337,20 +322,13 @@ exports.ignored_post_delete = [
   }),
 ];
 
+// #endregion
+
+// #region IGNORED TOPICS
+
 exports.ignored_topics_get = [
   passport.authenticate('jwt', { session: false }),
-  query('limit', 'Limit query must have valid format')
-    .default(MAX_DOCS_PER_FETCH)
-    .trim()
-    .isInt()
-    .customSanitizer(limitQuerySanitizer)
-    .escape(),
-  query('page', 'Page query must have valid format')
-    .default(1)
-    .trim()
-    .isInt()
-    .customSanitizer(pageQuerySanitizer)
-    .escape(),
+  generalResourceQueries(MAX_DOCS_PER_FETCH),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
@@ -457,20 +435,13 @@ exports.ignored_topic_delete = [
   }),
 ];
 
+// #endregion
+
+// #region FOLLOWED USERS
+
 exports.followed_users_get = [
   passport.authenticate('jwt', { session: false }),
-  query('limit', 'Limit query must have valid format')
-    .default(MAX_DOCS_PER_FETCH)
-    .trim()
-    .isInt()
-    .customSanitizer(limitQuerySanitizer)
-    .escape(),
-  query('page', 'Page query must have valid format')
-    .default(1)
-    .trim()
-    .isInt()
-    .customSanitizer(pageQuerySanitizer)
-    .escape(),
+  generalResourceQueries(MAX_DOCS_PER_FETCH),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
@@ -576,3 +547,5 @@ exports.followed_user_delete = [
     }
   }),
 ];
+
+// #endregion

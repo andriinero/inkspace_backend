@@ -1,10 +1,6 @@
 const { validationResult } = require('express-validator');
 const mongoose = require('mongoose');
 
-require('dotenv').config();
-
-const MAX_DOCS_PER_FETCH = parseInt(process.env.MAX_DOCS_PER_FETCH, 10);
-
 exports.isDbIdValid = (id) => mongoose.Types.ObjectId.isValid(id);
 
 exports.limitQuerySanitizer = (value) => {
@@ -15,22 +11,18 @@ exports.limitQuerySanitizer = (value) => {
   }
 };
 
-exports.pageQuerySanitizer = (model) => {
-  return async (value, { req }) => {
-    const errors = validationResult(req);
+exports.pageQuerySanitizer = (value, { req }) => {
+  const errors = validationResult(req);
 
-    if (!errors.isEmpty()) {
-      throw new Error('An error has occurred during sanitization');
+  if (!errors.isEmpty()) {
+    throw new Error('An error has occurred during sanitization');
+  } else {
+    if (value < 0) {
+      return 0;
     } else {
-      const docCount = await model.countDocuments().exec();
-
-      if (value < 0 || value > Math.ceil(docCount / MAX_DOCS_PER_FETCH)) {
-        return 0;
-      } else {
-        return --value;
-      }
+      return --value;
     }
-  };
+  }
 };
 
 exports.topicNameQuerySanitizer = (model) => {

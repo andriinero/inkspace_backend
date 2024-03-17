@@ -1,45 +1,26 @@
-const asyncHandler = require('express-async-handler');
-const { body, param, query, validationResult } = require('express-validator');
 const mongoose = require('mongoose');
 const passport = require('passport');
+const asyncHandler = require('express-async-handler');
+const { body, param, query, validationResult } = require('express-validator');
+
+const { topicNameQuerySanitizer, isDbIdValid } = require('../utils/validation');
+const { generalResourceQueries } = require('../middlewares/queryValidators');
 
 const Post = require('../models/post');
 const User = require('../models/user');
 const Topic = require('../models/topic');
-const {
-  limitQuerySanitizer,
-  pageQuerySanitizer,
-  topicNameQuerySanitizer,
-  isDbIdValid,
-} = require('../middlewares/validation');
 
 require('dotenv').config();
 
 const MAX_DOCS_PER_FETCH = parseInt(process.env.MAX_DOCS_PER_FETCH, 10);
 
 exports.posts_get = [
-  query('limit', 'Limit query must have valid format')
-    .default(MAX_DOCS_PER_FETCH)
-    .trim()
-    .isInt()
-    .customSanitizer(limitQuerySanitizer)
-    .escape(),
-  query('page', 'Page query must have valid format')
-    .default(1)
-    .trim()
-    .isInt()
-    .customSanitizer(pageQuerySanitizer(Post))
-    .escape(),
+  generalResourceQueries(MAX_DOCS_PER_FETCH),
   query('topic', 'Topic must be valid')
     .optional()
     .trim()
     .escape()
     .customSanitizer(topicNameQuerySanitizer(Topic)),
-  query('random', 'Random must have valid format')
-    .trim()
-    .optional()
-    .isInt({ min: 1 })
-    .escape(),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 

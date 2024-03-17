@@ -3,7 +3,7 @@ const asyncHandler = require('express-async-handler');
 const passport = require('passport');
 
 const Post = require('../models/post');
-const { isDbIdValid } = require('../middlewares/validation');
+const { isDbIdValid } = require('../utils/validation');
 
 exports.likes_get = [
   param('postid', 'Post id must be valid').trim().custom(isDbIdValid).escape(),
