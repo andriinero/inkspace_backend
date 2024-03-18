@@ -8,24 +8,20 @@ const Image = require('../models/image');
 let gridFSBucket = new GridFSBucket(mongoose.connection, { bucketName: 'images' });
 
 exports.image_get = asyncHandler(async (req, res) => {
-  let chunks = [];
-
   const downloadStream = gridFSBucket.openDownloadStream(
     new mongoose.Types.ObjectId(req.params.imageid)
   );
 
-  downloadStream.on('data', (chunk) => {
-    chunks.push(chunk);
+  downloadStream.on('data', (data) => {
+    res.write(data);
   });
 
   downloadStream.on('error', () => {
-    return res.status(400).json({ errors: [{ message: 'File not found' }] });
+    return res.status(404).json({ errors: [{ message: 'File not found' }] });
   });
 
   downloadStream.on('end', () => {
-    res.json({
-      imgURL: `data:image;base64,${Buffer.concat(chunks).toString('base64')}`,
-    });
+    res.end();
   });
 });
 
