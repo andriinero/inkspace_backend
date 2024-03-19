@@ -7,6 +7,8 @@ const cors = require('cors');
 const passport = require('passport');
 const JWTStrategy = require('passport-jwt').Strategy;
 const ExtractJWT = require('passport-jwt').ExtractJwt;
+const compression = require('compression');
+const helmet = require('helmet');
 
 require('dotenv').config();
 
@@ -36,6 +38,8 @@ const main = async () => {
 main().catch((err) => console.log(err.message));
 
 app.use(cors());
+app.use(helmet());
+app.use(compression());
 app.use(logger('dev'));
 app.use(cookieParser());
 app.use(express.json());
