@@ -106,7 +106,9 @@ exports.topic_put = [
           new: true,
           runValidators: true,
         }
-      ).exec();
+      )
+        .select('name')
+        .exec();
 
       if (!updatedTopic) {
         res.sendStatus(404);

@@ -213,7 +213,7 @@ exports.post_put = [
             req.params.postid,
             postDetail,
             { new: true, runValidators: true }
-          ).projection('author title date topic thumbnail_image');
+          ).select('author title date topic thumbnail_image');
 
           res.json(updatedPost);
         }

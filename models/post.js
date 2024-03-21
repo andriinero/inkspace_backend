@@ -9,7 +9,7 @@ const PostSchema = new Schema({
   topic: { type: Schema.Types.ObjectId, required: true, ref: 'Topic' },
   comments: [{ type: Schema.Types.ObjectId, required: true, ref: 'Comment' }],
   like_count: { type: Number, required: true, default: 0 },
-  thumbnail_image: { type: Schema.Types.ObjectId, required: true, ref: 'Image' },
+  thumbnail_image: { type: Schema.Types.ObjectId, ref: 'Image' },
   __v: { type: Number, select: false },
 });
 

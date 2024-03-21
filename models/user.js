@@ -11,8 +11,10 @@ const UserSchema = new Schema({
   user_posts: [{ type: Schema.Types.ObjectId, required: true, ref: 'Post' }],
   post_bookmarks: [{ type: Schema.Types.ObjectId, required: true, ref: 'Post' }],
   ignored_posts: [{ type: Schema.Types.ObjectId, required: true, ref: 'Post' }],
+  ignored_users: [{ type: Schema.Types.ObjectId, required: true, ref: 'User' }],
   ignored_topics: [{ type: Schema.Types.ObjectId, required: true, ref: 'Topic' }],
   followed_users: [{ type: Schema.Types.ObjectId, required: true, ref: 'User' }],
+  users_following: [{ type: Schema.Types.ObjectId, required: true, ref: 'User' }],
   profile_image: { type: Schema.Types.ObjectId, required: true, ref: 'Image' },
   __v: { type: Number, select: false },
 });

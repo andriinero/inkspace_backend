@@ -134,7 +134,7 @@ exports.comment_put = [
             commentDetail,
             { new: true, runValidators: true }
           )
-            .projection('author post body date edit_date')
+            .select('author post body date edit_date')
             .populate('author', 'username profile_image');
 
           res.json(updatedComment);

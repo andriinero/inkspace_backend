@@ -1,5 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const { query, param, validationResult } = require('express-validator');
+const mongoose = require('mongoose');
+const ObjectId = mongoose.Types.ObjectId;
 
 const { isDbIdValid } = require('../utils/validation');
 const { generalResourceQueries } = require('../middlewares/queryValidators');
@@ -25,29 +27,24 @@ exports.authors_get = [
     } else {
       const { limit, page, random } = req.query;
 
-      let users = [];
+      const stages = [];
 
-      if (random) {
-        users = await User.aggregate([
-          { $sample: { size: +random } },
-          { $skip: page * MAX_DOCS_PER_FETCH },
-          { $limit: +limit },
-          { $sort: { sign_up_date: -1 } },
-        ])
-          .project('username bio followed_users sign_up_date profile_image')
-          .exec();
-      } else {
-        users = await User.find(
-          {},
-          'username bio followed_users sign_up_date profile_image'
+      if (random) stages.push({ $sample: { size: +random } });
+
+      const allAuthors = await User.aggregate([
+        ...stages,
+        { $skip: page * MAX_DOCS_PER_FETCH },
+        { $limit: +limit },
+        { $sort: { sign_up_date: -1 } },
+        { $set: { followed_users_count: { $size: '$followed_users' } } },
+        { $set: { users_following_count: { $size: '$users_following' } } },
+      ])
+        .project(
+          'username bio followed_users_count users_following_count sign_up_date profile_image'
         )
-          .skip(page * MAX_DOCS_PER_FETCH)
-          .limit(limit)
-          .sort({ sign_up_date: -1 })
-          .exec();
-      }
+        .exec();
 
-      res.json(users);
+      res.json(allAuthors);
     }
   }),
 ];
@@ -60,15 +57,20 @@ exports.author_get = [
     if (!errors.isEmpty()) {
       res.status(400).json({ errors: errors.array() });
     } else {
-      const userById = await User.findById(
-        req.params.userid,
-        'username bio followed_users sign_up_date profile_image'
-      ).exec();
+      const authorById = await User.aggregate([
+        { $match: { _id: ObjectId(req.params.userid) } },
+        { $set: { followed_users_count: { $size: '$followed_users' } } },
+        { $set: { users_following_count: { $size: '$users_following' } } },
+      ])
+        .project(
+          'username bio followed_users_count users_following_count sign_up_date profile_image'
+        )
+        .exec();
 
-      if (!userById) {
+      if (!authorById) {
         res.sendStatus(404);
       } else {
-        res.json(userById);
+        res.json(authorById);
       }
     }
   }),

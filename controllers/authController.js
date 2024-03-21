@@ -113,7 +113,10 @@ exports.signup_post = [
 
       await newUser.save();
 
-      res.sendStatus({ message: 'User created successfully', _id: newUser._id.toString() });
+      res.sendStatus({
+        message: 'User created successfully',
+        _id: newUser._id.toString(),
+      });
     }
   }),
 ];
