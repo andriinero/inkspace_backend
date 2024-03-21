@@ -45,4 +45,8 @@ router.post('/followed-users', profileController.followed_user_post);
 
 router.delete('/followed-users/:userid', profileController.followed_user_delete);
 
+// USERS FOLLOWING //
+
+router.get('/users-following', profileController.users_following_get);
+
 module.exports = router;

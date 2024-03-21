@@ -493,12 +493,16 @@ exports.followed_user_post = [
     if (!errors.isEmpty()) {
       res.status(400).send({ errors: errors.array() });
     } else {
-      const userById = await User.findById(req.user._id).exec();
+      const currentUser = req.user;
+      const userById = await User.findById(req.body.userid).exec();
 
       if (!userById) {
         res.sendStatus(404);
       } else {
-        userById.followed_users.push(req.body.userid);
+        currentUser.followed_users.push(req.body.userid);
+        userById.users_following.push(currentUser._id);
+
+        await currentUser.save();
         await userById.save();
 
         res.send({ _id: req.body.userid });
@@ -530,19 +534,61 @@ exports.followed_user_delete = [
     if (!errors.isEmpty()) {
       res.status(400).send({ errors: errors.array() });
     } else {
-      const userById = await User.findById(req.user._id).exec();
+      const currentUser = req.user;
+      const userById = await User.findById(req.params.userid).exec();
 
       if (!userById) {
         res.sendStatus(404);
       } else {
-        const index = userById.followed_users.findIndex(
-          (p) => p._id.toString() === req.params.userid
+        const indexFollowed = currentUser.followed_users.findIndex(
+          (u) => u._id.toString() === req.params.userid
         );
-        const removedFollowedUser = userById.followed_users.splice(index, 1)[0];
+        const unfollowedUser = currentUser.followed_users.splice(indexFollowed, 1)[0];
 
+        const indexFollowing = userById.users_following.findIndex(
+          (u) => u._id.toString() === currentUser._id
+        );
+        userById.users_following.splice(indexFollowing, 1)[0];
+
+        await currentUser.save();
         await userById.save();
 
-        res.send({ _id: removedFollowedUser });
+        res.send({ _id: unfollowedUser });
+      }
+    }
+  }),
+];
+
+// #endregion
+
+// #region USERS FOLLOWING
+
+exports.users_following_get = [
+  passport.authenticate('jwt', { session: false }),
+  generalResourceQueries(MAX_DOCS_PER_FETCH),
+  asyncHandler(async (req, res) => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      res.status(400).json({ errors: errors.array() });
+    } else {
+      const { limit, page } = req.query;
+
+      const userById = await User.findById(req.user._id, 'users_following')
+        .populate({
+          path: 'users_following',
+          options: {
+            select: '-body -comments',
+            limit,
+            skip: page * MAX_DOCS_PER_FETCH,
+          },
+        })
+        .exec();
+
+      if (!userById) {
+        res.sendStatus(404);
+      } else {
+        res.send(userById);
       }
     }
   }),
