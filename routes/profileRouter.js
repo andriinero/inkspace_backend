@@ -5,6 +5,8 @@ const profileController = require('../controllers/profileController');
 
 router.get('/', profileController.profile_get);
 
+router.put('/', profileController.profile_put);
+
 // BIO //
 
 router.get('/bio', profileController.bio_get);

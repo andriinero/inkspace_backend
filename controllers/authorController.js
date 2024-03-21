@@ -70,7 +70,7 @@ exports.author_get = [
       if (!authorById) {
         res.sendStatus(404);
       } else {
-        res.json(authorById);
+        res.json(authorById[0]);
       }
     }
   }),

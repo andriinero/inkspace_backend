@@ -26,6 +26,39 @@ exports.profile_get = [
   }),
 ];
 
+exports.profile_put = [
+  passport.authenticate('jwt', { session: false }),
+  body('username').trim().isLength({ min: 3, max: 100 }).escape(),
+  body('password').trim().isLength({ min: 8 }).escape(),
+  body('email').trim().isLength({ min: 3, max: 100 }).escape(),
+  body('bio').trim().isLength({ max: 280 }).escape(),
+  asyncHandler(async (req, res) => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      res.status(400).send({ errors: errors.array() });
+    } else {
+      const profileDetails = {
+        username: req.body.username,
+        password: req.body.password,
+        email: req.body.email,
+        bio: req.body.bio,
+      };
+
+      const updatedProfile = await User.findByIdAndUpdate(req.user._id, profileDetails, {
+        new: true,
+        runValidators: true,
+      }).exec();
+
+      if (!updatedProfile) {
+        res.sendStatus(404);
+      } else {
+        res.send(updatedProfile);
+      }
+    }
+  }),
+];
+
 // #region BIO //
 
 exports.bio_get = [
