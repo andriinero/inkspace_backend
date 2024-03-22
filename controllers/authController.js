@@ -74,11 +74,7 @@ exports.signup_post = [
   body('passwordConfirmation')
     .trim()
     .custom((value, { req }) => {
-      if (value !== req.body.password) {
-        throw new Error('Passwords do not match');
-      } else {
-        return true;
-      }
+      return value === req.body.password;
     })
     .escape(),
   body('email')

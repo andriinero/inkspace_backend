@@ -7,13 +7,9 @@ router.get('/', profileController.profile_get);
 
 router.put('/', profileController.profile_put);
 
-// BIO //
+// PASSWORD //
 
-router.get('/bio', profileController.bio_get);
-
-router.post('/bio', profileController.bio_post);
-
-router.put('/bio', profileController.bio_put);
+router.put('/password', profileController.password_put);
 
 // BOOKMARKS //
 

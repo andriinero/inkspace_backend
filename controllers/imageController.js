@@ -4,6 +4,7 @@ const { GridFSBucket } = require('mongodb');
 const { upload } = require('../middlewares/imageUpload');
 
 const Image = require('../models/image');
+const passport = require('passport');
 
 let gridFSBucket = new GridFSBucket(mongoose.connection, { bucketName: 'images' });
 
@@ -15,21 +16,20 @@ exports.image_get = asyncHandler(async (req, res) => {
   downloadStream.on('data', (data) => {
     res.write(data);
   });
-
   downloadStream.on('error', () => {
     return res.status(404).json({ errors: [{ message: 'File not found' }] });
   });
-
   downloadStream.on('end', () => {
     res.end();
   });
 });
 
 exports.image_post = [
+  passport.authenticate('jwt', { session: false }),
   upload.single('image'),
   asyncHandler(async (req, res) => {
     const file = req.file;
 
-    res.json({ id: file.id, contentType: file.contentType });
+    res.json({ _id: file.id, contentType: file.contentType });
   }),
 ];

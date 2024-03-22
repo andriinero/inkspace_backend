@@ -1,6 +1,7 @@
 const passport = require('passport');
 const asyncHandler = require('express-async-handler');
 const { body, param, validationResult } = require('express-validator');
+const bcrypt = require('bcryptjs');
 
 const User = require('../models/user');
 const Post = require('../models/post');
@@ -28,10 +29,9 @@ exports.profile_get = [
 
 exports.profile_put = [
   passport.authenticate('jwt', { session: false }),
-  body('username').trim().isLength({ min: 3, max: 100 }).escape(),
-  body('password').trim().isLength({ min: 8 }).escape(),
-  body('email').trim().isLength({ min: 3, max: 100 }).escape(),
-  body('bio').trim().isLength({ max: 280 }).escape(),
+  body('username').trim().isLength({ min: 3, max: 100 }).optional().escape(),
+  body('email').trim().isLength({ min: 3, max: 100 }).optional().escape(),
+  body('bio').trim().isLength({ max: 280 }).optional().escape(),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
@@ -40,7 +40,6 @@ exports.profile_put = [
     } else {
       const profileDetails = {
         username: req.body.username,
-        password: req.body.password,
         email: req.body.email,
         bio: req.body.bio,
       };
@@ -48,7 +47,9 @@ exports.profile_put = [
       const updatedProfile = await User.findByIdAndUpdate(req.user._id, profileDetails, {
         new: true,
         runValidators: true,
-      }).exec();
+      })
+        .select('username email bio')
+        .exec();
 
       if (!updatedProfile) {
         res.sendStatus(404);
@@ -59,30 +60,15 @@ exports.profile_put = [
   }),
 ];
 
-// #region BIO //
+// #region PASSWORD //
 
-exports.bio_get = [
+exports.password_put = [
   passport.authenticate('jwt', { session: false }),
-  asyncHandler(async (req, res) => {
-    const userById = await User.findById(req.user._id, 'bio').exec();
-
-    if (!userById) {
-      res.sendStatus(404);
-    } else {
-      res.send(userById);
-    }
-  }),
-];
-
-exports.bio_post = [
-  passport.authenticate('jwt', { session: false }),
-  body('biobody')
+  body('password').trim().isLength({ min: 8 }).escape(),
+  body('passwordConfirmation')
     .trim()
-    .isLength({ max: 280 })
-    .custom(async (_, { req }) => {
-      const userById = await User.findById(req.user._id).exec();
-
-      if (userById && userById.bio) throw new Error('User bio already exists');
+    .custom((value, { req }) => {
+      return value === req.body.password;
     })
     .escape(),
   asyncHandler(async (req, res) => {
@@ -91,38 +77,22 @@ exports.bio_post = [
     if (!errors.isEmpty()) {
       res.status(400).send({ errors: errors.array() });
     } else {
-      const userById = await User.findById(req.user._id, 'bio').exec();
+      const SALT_VALUE = +process.env.SALT_VALUE;
+      const password = await bcrypt.hash(req.body.password, SALT_VALUE);
 
-      if (!userById) {
+      const updatedProfile = await User.findByIdAndUpdate(
+        req.user._id,
+        { password },
+        {
+          new: true,
+          runValidators: true,
+        }
+      ).exec();
+
+      if (!updatedProfile) {
         res.sendStatus(404);
       } else {
-        userById.bio = req.body.biobody;
-        await userById.save();
-
-        res.send(userById);
-      }
-    }
-  }),
-];
-
-exports.bio_put = [
-  passport.authenticate('jwt', { session: false }),
-  body('biobody').trim().isLength({ max: 280 }).escape(),
-  asyncHandler(async (req, res) => {
-    const errors = validationResult(req);
-
-    if (!errors.isEmpty()) {
-      res.status(400).send({ errors: errors.array() });
-    } else {
-      const userById = await User.findById(req.user._id, 'bio').exec();
-
-      if (!userById) {
-        res.sendStatus(404);
-      } else {
-        userById.bio = req.body.biobody;
-        await userById.save();
-
-        res.send(userById);
+        res.send({ _id: req.user._id });
       }
     }
   }),
