@@ -11,6 +11,10 @@ router.put('/', profileController.profile_put);
 
 router.put('/password', profileController.password_put);
 
+// PROFILE IMAGE //
+
+router.put('/image', profileController.profile_image_put);
+
 // BOOKMARKS //
 
 router.get('/bookmarks', profileController.bookmarks_get);

@@ -6,7 +6,7 @@ const { upload } = require('../middlewares/imageUpload');
 const Image = require('../models/image');
 const passport = require('passport');
 
-let gridFSBucket = new GridFSBucket(mongoose.connection, { bucketName: 'images' });
+const gridFSBucket = new GridFSBucket(mongoose.connection, { bucketName: 'images' });
 
 exports.image_get = asyncHandler(async (req, res) => {
   const downloadStream = gridFSBucket.openDownloadStream(

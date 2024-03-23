@@ -1,7 +1,10 @@
+const mongoose = require('mongoose');
 const passport = require('passport');
 const asyncHandler = require('express-async-handler');
 const { body, param, validationResult } = require('express-validator');
+const { GridFSBucket } = require('mongodb');
 const bcrypt = require('bcryptjs');
+const { upload } = require('../middlewares/imageUpload');
 
 const User = require('../models/user');
 const Post = require('../models/post');
@@ -9,6 +12,8 @@ const Topic = require('../models/topic');
 
 const { isDbIdValid } = require('../utils/validation');
 const { generalResourceQueries } = require('../middlewares/queryValidators');
+
+const gridFSBucket = new GridFSBucket(mongoose.connection, { bucketName: 'images' });
 
 require('dotenv').config();
 
@@ -94,6 +99,28 @@ exports.password_put = [
       } else {
         res.send({ _id: req.user._id });
       }
+    }
+  }),
+];
+
+// #endregion
+
+// #region PROFILE IMAGE //
+
+exports.profile_image_put = [
+  passport.authenticate('jwt', { session: false }),
+  upload.single('image'),
+  asyncHandler(async (req, res) => {
+    if (!req.file) {
+      res.sendStatus(400);
+    } else {
+      const currentUser = req.user;
+      const imageId = req.file.id;
+
+      currentUser.profile_image = imageId;
+      await currentUser.save();
+
+      currentUser.profile_image = res.json({ _id: currentUser.profile_image });
     }
   }),
 ];
