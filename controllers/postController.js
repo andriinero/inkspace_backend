@@ -3,7 +3,11 @@ const passport = require('passport');
 const asyncHandler = require('express-async-handler');
 const { body, param, query, validationResult } = require('express-validator');
 
-const { topicNameQuerySanitizer, isDbIdValid } = require('../utils/validation');
+const {
+  topicNameQuerySanitizer,
+  isDbIdValid,
+  topicSanitizer,
+} = require('../utils/validation');
 const { generalResourceQueries } = require('../middlewares/queryValidators');
 
 const Post = require('../models/post');
@@ -121,21 +125,7 @@ exports.post_post = [
   body('body', 'Post body must have correct length')
     .trim()
     .isLength({ min: 100, max: 10000 }),
-  body('topic', 'Topic must be valid')
-    .trim()
-    .customSanitizer(async (value) => {
-      const topic = await Topic.findOne({ name: value }).exec();
-
-      if (!topic) {
-        const topic = new Topic({ name: value });
-        const savedTopic = await topic.save();
-
-        return savedTopic._id;
-      } else {
-        return topic._id;
-      }
-    })
-    .escape(),
+  body('topic', 'Topic must be valid').trim().customSanitizer(topicSanitizer).escape(),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
@@ -177,23 +167,13 @@ exports.post_put = [
   body('topic', 'Topic must be valid')
     .optional()
     .trim()
-    .custom(async (value) => {
-      const isValid = mongoose.Types.ObjectId.isValid(value);
-
-      if (!isValid) {
-        throw new Error('Invalid topic id');
-      } else {
-        const topic = await Topic.findOne({ _id: value }).exec();
-
-        if (!topic) throw new Error('Invalid topic');
-      }
-    })
+    .customSanitizer(topicSanitizer)
     .escape(),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ errors: errors.array() });
+      res.status(400).json({ message: 'Bad request', errors: errors.array() });
     } else {
       const postById = await Post.findById(req.params.postid).exec();
 
@@ -213,7 +193,11 @@ exports.post_put = [
             req.params.postid,
             postDetail,
             { new: true, runValidators: true }
-          ).select('author title date topic thumbnail_image');
+          )
+            .select('author title body date topic like_count thumbnail_image')
+            .populate('author', 'username profile_image')
+            .populate('topic', 'name')
+            .exec();
 
           res.json(updatedPost);
         }
