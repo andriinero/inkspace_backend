@@ -11,12 +11,12 @@ exports.likes_get = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ errors: errors.array() });
+      res.status(400).json({ message: 'Validation error', errors: errors.array() });
     } else {
       const postById = await Post.findById(req.params.postid, 'like_count').exec();
 
       if (!postById) {
-        res.sendStatus(404);
+        res.status(404).json({ message: 'Post not found' });
       } else {
         res.json(postById);
       }
@@ -31,12 +31,12 @@ exports.likes_put = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ errors: errors.array() });
+      res.status(400).json({ message: 'Validation error', errors: errors.array() });
     } else {
       const postById = await Post.findById(req.params.postid, 'like_count').exec();
 
       if (!postById) {
-        res.sendStatus(404);
+        res.status(404).json({ message: 'Post not found' });
       } else {
         postById.like_count += 1;
         await postById.save();

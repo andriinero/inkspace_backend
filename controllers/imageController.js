@@ -17,7 +17,7 @@ exports.image_get = asyncHandler(async (req, res) => {
     res.write(data);
   });
   downloadStream.on('error', () => {
-    return res.status(404).json({ errors: [{ message: 'File not found' }] });
+    return res.status(404).json({ message: 'Image not found' });
   });
   downloadStream.on('end', () => {
     res.end();

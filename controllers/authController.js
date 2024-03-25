@@ -28,17 +28,17 @@ exports.login_post = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ errors: errors.array() });
+      res.status(400).json({ message: 'Validation error', errors: errors.array() });
     } else {
       const userByUsername = await User.findOne({ username: req.body.username }).exec();
 
       if (!userByUsername) {
-        res.status(401).json({ message: 'Error: incorrect credentials.' });
+        res.status(401).json({ message: 'Incorrect credentials' });
       } else {
         const match = await bcrypt.compare(req.body.password, userByUsername.password);
 
         if (!match) {
-          res.status(401).json({ message: 'Error: incorrect credentials.' });
+          res.status(401).json({ message: 'Incorrect credentials' });
         } else {
           const opts = { expiresIn: '1d' };
           const SECRET_KEY = process.env.SECRET_KEY;
@@ -80,6 +80,7 @@ exports.signup_post = [
   body('email')
     .trim()
     .isEmail()
+    .isLength({ min: 3, max: 100 })
     .custom(async (value) => {
       const userByEmail = await User.findOne({ email: value });
 
@@ -94,7 +95,7 @@ exports.signup_post = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ errors: errors.array() });
+      res.status(400).json({ message: 'Validation error', errors: errors.array() });
     } else {
       const SALT_VALUE = +process.env.SALT_VALUE;
       const hashedPassword = await bcrypt.hash(req.body.password, SALT_VALUE);
@@ -109,7 +110,7 @@ exports.signup_post = [
 
       await newUser.save();
 
-      res.sendStatus({
+      res.json({
         message: 'User created successfully',
         _id: newUser._id.toString(),
       });

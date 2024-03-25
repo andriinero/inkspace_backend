@@ -15,7 +15,7 @@ const UserSchema = new Schema({
   ignored_topics: [{ type: Schema.Types.ObjectId, required: true, ref: 'Topic' }],
   followed_users: [{ type: Schema.Types.ObjectId, required: true, ref: 'User' }],
   users_following: [{ type: Schema.Types.ObjectId, required: true, ref: 'User' }],
-  profile_image: { type: Schema.Types.ObjectId, required: true, ref: 'Image' },
+  profile_image: { type: Schema.Types.ObjectId, ref: 'Image' },
   __v: { type: Number, select: false },
 });
 

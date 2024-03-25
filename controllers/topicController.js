@@ -23,7 +23,7 @@ exports.topics_get = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.send(400).json({ errors: errors.array() });
+      res.send(400).json({ message: 'Validation error', errors: errors.array() });
     } else {
       const { limit, page, random } = req.query;
 
@@ -49,12 +49,12 @@ exports.topic_get = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ errors: errors.array() });
+      res.status(400).json({ message: 'Validation error', errors: errors.array() });
     } else {
       const topicById = await Topic.findById(req.params.topicid).exec();
 
       if (!topicById) {
-        res.sendStatus(404);
+        res.status(404).json({ message: 'Topic not found' });
       } else {
         res.json(topicById);
       }
@@ -72,7 +72,7 @@ exports.topic_post = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ errors: errors.array() });
+      res.status(400).json({ message: 'Validation error', errors: errors.array() });
     } else {
       const topicDetail = { name: req.body.name };
 
@@ -95,7 +95,7 @@ exports.topic_put = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ errors: errors.array() });
+      res.status(400).json({ message: 'Validation error', errors: errors.array() });
     } else {
       const topicDetail = { name: req.body.name };
 
@@ -111,7 +111,7 @@ exports.topic_put = [
         .exec();
 
       if (!updatedTopic) {
-        res.sendStatus(404);
+        res.status(404).json({ message: 'Topic not found' });
       } else {
         res.json(updatedTopic);
       }
@@ -126,12 +126,12 @@ exports.topic_delete = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ errors: errors.array() });
+      res.status(400).json({ message: 'Validation error', errors: errors.array() });
     } else {
       const deletedTopic = await Topic.findByIdAndDelete(req.params.topicid).exec();
 
       if (!deletedTopic) {
-        res.sendStatus(400);
+        res.status(404).json({ message: 'Topic not found' });
       } else {
         res.json({ _id: deletedTopic._id.toString() });
       }

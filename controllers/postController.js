@@ -29,7 +29,7 @@ exports.posts_get = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ errors: errors.array() });
+      res.status(400).json({ message: 'Validation error', errors: errors.array() });
     } else {
       const { page, limit, topic, userid, random } = req.query;
 
@@ -92,7 +92,7 @@ exports.post_get = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ errors: errors.array() });
+      res.status(400).json({ message: 'Validation error', errors: errors.array() });
     } else {
       const post = await Post.findById(
         req.params.postid,
@@ -111,7 +111,7 @@ exports.post_get = [
         .exec();
 
       if (!post) {
-        res.sendStatus(404);
+        res.status(404).json({ message: 'Post not found' });
       } else {
         res.json(post);
       }
@@ -130,7 +130,7 @@ exports.post_post = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ errors: errors.array() });
+      res.status(400).json({ message: 'Validation error', errors: errors.array() });
     } else {
       const user = req.user;
 
@@ -173,15 +173,15 @@ exports.post_put = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ message: 'Bad request', errors: errors.array() });
+      res.status(400).json({ message: 'Validation error', errors: errors.array() });
     } else {
       const postById = await Post.findById(req.params.postid).exec();
 
       if (!postById) {
-        res.sendStatus(404);
+        res.status(404).json({ message: 'Post not found' });
       } else {
         if (!postById.author._id.equals(req.user._id)) {
-          res.sendStatus(403);
+          res.status(403).json({ message: 'Authorization error' });
         } else {
           const postDetail = {
             title: req.body.title,
@@ -213,17 +213,17 @@ exports.post_delete = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ errors: errors.array() });
+      res.status(400).json({ message: 'Validation error', errors: errors.array() });
     } else {
       const postById = await Post.findById(req.params.postid).exec();
 
       if (!postById) {
-        res.sendStatus(404);
+        res.status(404).json({ message: 'Post not found' });
       } else {
         if (!postById.author._id.equals(req.user._id)) {
-          res.sendStatus(403);
+          res.status(403).json({ message: 'Authorization error' });
         } else {
-          const deletedPost = await postById.deleteOne();
+          await postById.deleteOne();
 
           res.json({ _id: postById._id.toString() });
         }

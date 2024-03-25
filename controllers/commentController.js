@@ -19,7 +19,7 @@ exports.comments_get = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ errors: errors.array() });
+      res.status(400).json({ message: 'Validation error', errors: errors.array() });
     } else {
       const { limit, page } = req.query;
 
@@ -34,7 +34,7 @@ exports.comments_get = [
         .exec();
 
       if (!allCommentsByPost) {
-        res.sendStatus(404);
+        res.status(404).json({ message: 'Comments not found' });
       } else {
         res.json(allCommentsByPost);
       }
@@ -48,7 +48,7 @@ exports.comment_get = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ errors: errors.array() });
+      res.status(400).json({ message: 'Validation error', errors: errors.array() });
     } else {
       const comment = await Comment.findById(
         req.params.commentid,
@@ -58,7 +58,7 @@ exports.comment_get = [
         .exec();
 
       if (!comment) {
-        res.sendStatus(404);
+        res.status(404).json({ message: 'Comment not found' });
       } else {
         res.json(comment);
       }
@@ -76,12 +76,12 @@ exports.comment_post = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ errors: errors.array() });
+      res.status(400).json({ message: 'Validation error', errors: errors.array() });
     } else {
       const post = await Post.findById(req.params.postid).exec();
 
       if (!post) {
-        res.sendStatus(404);
+        res.status(404).json({ message: 'Post not found' });
       } else {
         const commentDetail = {
           author: req.user._id,
@@ -114,15 +114,15 @@ exports.comment_put = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ errors: errors.array() });
+      res.status(400).json({ message: 'Validation error', errors: errors.array() });
     } else {
       const commentById = await Comment.findById(req.params.commentid).exec();
 
       if (!commentById) {
-        res.sendStatus(404);
+        res.status(404).json({ message: 'Comment not found' });
       } else {
         if (!commentById.author._id.equals(req.user._id)) {
-          res.sendStatus(403);
+          res.status(403).json({ message: 'Authorization error' });
         } else {
           const commentDetail = {
             body: req.body.body,
@@ -151,16 +151,16 @@ exports.comment_delete = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ errors: errors.array() });
+      res.status(400).json({ message: 'Validation error', errors: errors.array() });
     } else {
       const commentById = await Comment.findById(req.params.commentid).exec();
       const postById = await Post.findById(commentById.post).exec();
 
       if (!commentById || !postById) {
-        res.sendStatus(404);
+        res.status(404).json({ message: 'Comment not found' });
       } else {
         if (!commentById.author._id.equals(req.user._id)) {
-          res.sendStatus(403);
+          res.status(403).json({ message: 'Authorization error' });
         } else {
           const result = await commentById.deleteOne();
 

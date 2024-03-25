@@ -23,7 +23,7 @@ exports.authors_get = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json(errors.array());
+      res.status(400).json({ message: 'Validation error', error: errors.array() });
     } else {
       const { limit, page, random } = req.query;
 
@@ -55,7 +55,7 @@ exports.author_get = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ errors: errors.array() });
+      res.status(400).json({ message: 'Validation error', errors: errors.array() });
     } else {
       const authorById = await User.aggregate([
         { $match: { _id: ObjectId(req.params.userid) } },
@@ -68,7 +68,7 @@ exports.author_get = [
         .exec();
 
       if (!authorById) {
-        res.sendStatus(404);
+        res.status(404).json({ message: 'Author not found' });
       } else {
         res.json(authorById[0]);
       }
