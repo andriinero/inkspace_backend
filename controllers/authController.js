@@ -71,7 +71,7 @@ exports.signup_post = [
     })
     .escape(),
   body('password').trim().isLength({ min: 8 }).escape(),
-  body('passwordConfirmation')
+  body('confirmPassword')
     .trim()
     .custom((value, { req }) => {
       return value === req.body.password;

@@ -118,7 +118,9 @@ exports.profile_image_put = [
       const profileImageId = req.user.profile_image;
       const imageId = req.file.id;
 
-      await gridFSBucket.delete(new mongoose.Types.ObjectId(profileImageId));
+      if (profileImageId) {
+        await gridFSBucket.delete(new mongoose.Types.ObjectId(profileImageId));
+      }
 
       currentUser.profile_image = imageId;
       await currentUser.save();

@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const passport = require('passport');
 const asyncHandler = require('express-async-handler');
 const { body, param, query, validationResult } = require('express-validator');
+const { GridFSBucket } = require('mongodb');
 
 const {
   topicNameQuerySanitizer,
@@ -13,6 +14,9 @@ const { generalResourceQueries } = require('../middlewares/queryValidators');
 const Post = require('../models/post');
 const User = require('../models/user');
 const Topic = require('../models/topic');
+const { upload } = require('../middlewares/imageUpload');
+
+const gridFSBucket = new GridFSBucket(mongoose.connection, { bucketName: 'images' });
 
 require('dotenv').config();
 
@@ -121,6 +125,7 @@ exports.post_get = [
 
 exports.post_post = [
   passport.authenticate('jwt', { session: false }),
+  upload.single('image'),
   body('title', 'Title must have correct length').trim().isLength({ min: 3, max: 100 }),
   body('body', 'Post body must have correct length')
     .trim()
@@ -133,6 +138,7 @@ exports.post_post = [
       res.status(400).json({ message: 'Validation error', errors: errors.array() });
     } else {
       const user = req.user;
+      const thumbnailImageId = req.file.id;
 
       const postDetail = {
         author: user._id,
@@ -140,6 +146,7 @@ exports.post_post = [
         body: req.body.body,
         topic: req.body.topic,
         date: new Date(),
+        thumbnail_image: thumbnailImageId.id,
       };
 
       const newPost = new Post(postDetail);
@@ -155,6 +162,7 @@ exports.post_post = [
 
 exports.post_put = [
   passport.authenticate('jwt', { session: false }),
+  upload.single('image'),
   param('postid', 'Post id must be valid').trim().custom(isDbIdValid).escape(),
   body('title', 'Title must have correct length')
     .optional()
@@ -183,10 +191,18 @@ exports.post_put = [
         if (!postById.author._id.equals(req.user._id)) {
           res.status(403).json({ message: 'Authorization error' });
         } else {
+          const postThumbnailId = postById.thumbnail_image;
+          const thumbnailImageId = req.file.id;
+
+          if (postThumbnailId && thumbnailImageId) {
+            await gridFSBucket.delete(new mongoose.Types.ObjectId(postThumbnailId));
+          }
+
           const postDetail = {
             title: req.body.title,
             body: req.body.body,
             topic: req.body.topic,
+            thumbnail_image: thumbnailImageId,
           };
 
           const updatedPost = await Post.findByIdAndUpdate(

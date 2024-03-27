@@ -9,6 +9,7 @@ const JWTStrategy = require('passport-jwt').Strategy;
 const ExtractJWT = require('passport-jwt').ExtractJwt;
 const compression = require('compression');
 const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 
 require('dotenv').config();
 
@@ -37,6 +38,12 @@ const main = async () => {
 };
 main().catch((err) => console.log(err.message));
 
+const limiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 1000,
+});
+
+app.use(limiter);
 app.use(cors());
 app.use(helmet());
 app.use(compression());
