@@ -146,7 +146,7 @@ exports.post_post = [
         body: req.body.body,
         topic: req.body.topic,
         date: new Date(),
-        thumbnail_image: thumbnailImageId.id,
+        thumbnail_image: thumbnailImageId,
       };
 
       const newPost = new Post(postDetail);
