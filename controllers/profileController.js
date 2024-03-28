@@ -359,6 +359,119 @@ exports.ignored_post_delete = [
 
 // #endregion
 
+// #region IGNORED USERS
+
+exports.ignored_users_get = [
+  passport.authenticate('jwt', { session: false }),
+  generalResourceQueries(MAX_DOCS_PER_FETCH),
+  asyncHandler(async (req, res) => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      res.status(400).json({ message: 'Validation error', errors: errors.array() });
+    } else {
+      const { limit, page } = req.query;
+
+      const userById = await User.findById(req.user._id, 'ignored_users')
+        .populate({
+          path: 'ignored_users',
+          options: {
+            select: '_id',
+            limit,
+            skip: page * MAX_DOCS_PER_FETCH,
+          },
+        })
+        .exec();
+
+      if (!userById) {
+        res.status(404).json({ message: 'User not found' });
+      } else {
+        res.json(userById.ignored_users);
+      }
+    }
+  }),
+];
+
+exports.ignored_user_post = [
+  passport.authenticate('jwt', { session: false }),
+  body('userid', 'User id must be valid')
+    .trim()
+    .custom(isDbIdValid)
+    .custom(async (value) => {
+      const userById = await User.findById(value).exec();
+
+      if (!userById) throw new Error("Post with this id doesn't exist");
+    })
+    .custom(async (value, { req }) => {
+      const userById = await User.findById(req.user._id).exec();
+
+      if (userById.ignored_users.some((objId) => objId.toString() === value))
+        throw new Error('This user is already ignored');
+    })
+    .escape(),
+  asyncHandler(async (req, res) => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      res.status(400).send({ message: 'Validation error', errors: errors.array() });
+    } else {
+      const userById = await User.findById(req.user._id).exec();
+
+      if (!userById) {
+        res.status(404).json({ message: 'User not found' });
+      } else {
+        userById.ignored_users.push(req.body.userid);
+        await userById.save();
+
+        res.json({ _id: req.body.userid });
+      }
+    }
+  }),
+];
+
+exports.ignored_user_delete = [
+  passport.authenticate('jwt', { session: false }),
+  param('userid', 'User id must be valid')
+    .trim()
+    .custom(isDbIdValid)
+    .custom(async (value) => {
+      const userById = await User.findById(value).exec();
+
+      if (!userById) throw new Error("User with this id doesn't exist");
+    })
+    .custom(async (value, { req }) => {
+      const userById = await User.findById(req.user._id);
+
+      if (!userById.ignored_users.some((objId) => objId.toString() === value))
+        throw new Error("This user doesn't exist");
+    })
+    .escape(),
+  asyncHandler(async (req, res) => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      res.status(400).send({ message: 'Validation error', errors: errors.array() });
+    } else {
+      const userById = await User.findById(req.user._id).exec();
+
+      if (!userById) {
+        res.status(404).json({ message: 'User not found' });
+      } else {
+        const index = userById.ignored_users.findIndex(
+          (p) => p._id.toString() === req.params.postid
+        );
+        const removedIgnoredUser = userById.ignored_users.splice(index, 1)[0];
+
+        await userById.save();
+
+        res.json({ _id: removedIgnoredUser });
+      }
+    }
+  }),
+];
+
+// #endregion
+
 // #region IGNORED TOPICS
 
 exports.ignored_topics_get = [

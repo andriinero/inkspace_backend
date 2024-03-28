@@ -31,6 +31,14 @@ router.post('/ignored-posts', profileController.ignored_post_post);
 
 router.delete('/ignored-posts/:postid', profileController.ignored_post_delete);
 
+// IGNORED USERS //
+
+router.get('/ignored-users', profileController.ignored_users_get);
+
+router.post('/ignored-users', profileController.ignored_user_post);
+
+router.delete('/ignored-users/:userid', profileController.ignored_user_delete);
+
 // IGNORED TOPICS //
 
 router.get('/ignored-topics', profileController.ignored_topics_get);

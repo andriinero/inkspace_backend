@@ -23,7 +23,7 @@ PostSchema.virtual('url').get(function () {
   return `/posts/${this._id}`;
 });
 
-PostSchema.pre('deleteOne', { document: true, query: false }, async function (next) {
+PostSchema.pre('deleteOne', { document: true, query: false }, async function () {
   await Comment.deleteMany({ post: this._id });
   await gridFSBucket.delete(new mongoose.Types.ObjectId(this.thumbnail_image));
 
