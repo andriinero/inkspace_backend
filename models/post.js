@@ -25,7 +25,8 @@ PostSchema.virtual('url').get(function () {
 
 PostSchema.pre('deleteOne', { document: true, query: false }, async function () {
   await Comment.deleteMany({ post: this._id });
-  await gridFSBucket.delete(new mongoose.Types.ObjectId(this.thumbnail_image));
+  if (this.thumbnail_image)
+    await gridFSBucket.delete(new mongoose.Types.ObjectId(this.thumbnail_image));
 
   const userByPostId = await User.findOne({ user_posts: this._id }).exec();
   userByPostId.user_posts = userByPostId.user_posts.filter(
@@ -45,5 +46,7 @@ PostSchema.pre('deleteOne', { document: true, query: false }, async function () 
     await user.save();
   }
 });
+
+PostSchema.pre('deleteMany', { document: true, query: false }, async function () {});
 
 module.exports = mongoose.model('Post', PostSchema);

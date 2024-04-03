@@ -1,6 +1,6 @@
 const { query } = require('express-validator');
 
-const { limitQuerySanitizer, pageQuerySanitizer } = require('../utils/validation');
+const { limitQuerySanitizer, pageQuerySanitizer } = require('./validation');
 
 exports.generalResourceQueries = (limit) => [
   query('limit', 'Limit query must have valid format')

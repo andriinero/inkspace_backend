@@ -8,7 +8,7 @@ const {
   topicNameQuerySanitizer,
   isDbIdValid,
   topicSanitizer,
-} = require('../utils/validation');
+} = require('../middlewares/validation');
 const { generalResourceQueries } = require('../middlewares/queryValidators');
 
 const Post = require('../models/post');
@@ -16,7 +16,9 @@ const User = require('../models/user');
 const Topic = require('../models/topic');
 const { upload } = require('../middlewares/imageUpload');
 
-const gridFSBucket = new GridFSBucket(mongoose.connection, { bucketName: 'images' });
+const gridFSBucket = new GridFSBucket(mongoose.connection, {
+  bucketName: 'images',
+});
 
 require('dotenv').config();
 
@@ -231,7 +233,8 @@ exports.post_delete = [
     if (!errors.isEmpty()) {
       res.status(400).json({ message: 'Validation error', errors: errors.array() });
     } else {
-      const postById = await Post.findById(req.params.postid).exec();
+      const postId = req.params.postid;
+      const postById = await Post.findById(postId).exec();
 
       if (!postById) {
         res.status(404).json({ message: 'Post not found' });
@@ -241,7 +244,7 @@ exports.post_delete = [
         } else {
           await postById.deleteOne();
 
-          res.json({ _id: postById._id.toString() });
+          res.json({ _id: postById.id });
         }
       }
     }

@@ -3,7 +3,7 @@ const { query, param, validationResult } = require('express-validator');
 const mongoose = require('mongoose');
 const ObjectId = mongoose.Types.ObjectId;
 
-const { isDbIdValid } = require('../utils/validation');
+const { isDbIdValid } = require('../middlewares/validation');
 const { generalResourceQueries } = require('../middlewares/queryValidators');
 
 const User = require('../models/user');

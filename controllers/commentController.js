@@ -2,7 +2,7 @@ const passport = require('passport');
 const asyncHandler = require('express-async-handler');
 const { body, param, validationResult } = require('express-validator');
 
-const { isDbIdValid } = require('../utils/validation');
+const { isDbIdValid } = require('../middlewares/validation');
 const { generalResourceQueries } = require('../middlewares/queryValidators');
 
 const Comment = require('../models/comment');
