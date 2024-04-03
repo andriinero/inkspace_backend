@@ -7,6 +7,8 @@ router.get('/', profileController.profile_get);
 
 router.put('/', profileController.profile_put);
 
+router.delete('/:userid', profileController.profile_delete);
+
 // PASSWORD //
 
 router.put('/password', profileController.password_put);

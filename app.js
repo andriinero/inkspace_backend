@@ -28,7 +28,6 @@ const topicRouter = require('./routes/topicRouter');
 const profileRouter = require('./routes/profileRouter');
 const authRouter = require('./routes/authRouter');
 const imageRouter = require('./routes/imageRouter');
-const userRouter = require('./routes/userRouter');
 
 const app = express();
 
@@ -78,6 +77,5 @@ app.use('/api/topics', topicRouter);
 app.use('/api/profile', profileRouter);
 app.use('/auth', authRouter);
 app.use('/api/images', imageRouter);
-app.use('/api/users', userRouter);
 
 module.exports = app;
