@@ -4,7 +4,6 @@ const { GridFSBucket } = require('mongodb');
 
 const gridFSBucket = new GridFSBucket(mongoose.connection, { bucketName: 'images' });
 
-const Post = require('../models/post');
 const Comment = require('../models/comment');
 
 const UserSchema = new Schema({
@@ -34,6 +33,7 @@ UserSchema.virtual('url').get(function () {
   return `/users/${this._id}`;
 });
 
+//FIXME: circular dependency
 UserSchema.pre('deleteOne', { document: true, query: false }, async function () {
   await Comment.deleteMany({ author: this._id });
   await Post.deleteMany({ author: this._id });

@@ -31,61 +31,58 @@ exports.posts_get = [
     .trim()
     .escape()
     .customSanitizer(topicNameQuerySanitizer(Topic)),
+  query('ignoreid').optional().default('').trim().escape(),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
       res.status(400).json({ message: 'Validation error', errors: errors.array() });
     } else {
-      const { page, limit, topic, userid, random } = req.query;
+      const { page, limit, topic, userid, random, ignoreid } = req.query;
 
-      let posts = [];
+      const queryOpts = [];
 
-      if (random) {
-        posts = await Post.aggregate([
-          { $sample: { size: +random } },
-          { $limit: +limit },
-          { $skip: page * MAX_DOCS_PER_FETCH },
-          {
-            $lookup: {
-              from: User.collection.name,
-              localField: 'author',
-              foreignField: '_id',
-              pipeline: [{ $project: { username: 1, profile_image: 1 } }],
-              as: 'author',
-            },
-          },
-          { $unwind: '$author' },
-          {
-            $lookup: {
-              from: Topic.collection.name,
-              localField: 'topic',
-              foreignField: '_id',
-              pipeline: [{ $project: { name: 1 } }],
-              as: 'topic',
-            },
-          },
-          { $unwind: '$topic' },
-        ])
-          .project('author title body date topic like_count thumbnail_image')
-          .exec();
-      } else {
-        const queryOpts = {};
+      if (topic) queryOpts.push({ $match: { topic: topic } });
+      if (userid) queryOpts.push({ $match: { author: userid } });
+      if (random) queryOpts.push({ $sample: { size: +random } });
+      if (ignoreid) {
+        const ignoredUser = await User.findById(ignoreid).exec();
+        const userPosts = ignoredUser.user_posts;
 
-        if (topic) queryOpts['topic'] = topic;
-        if (userid) queryOpts['author'] = userid;
+        // FIXME: remove comment
+        console.log(userPosts);
 
-        posts = await Post.find(
-          queryOpts,
-          'author title body date topic like_count thumbnail_image'
-        )
-          .skip(page * MAX_DOCS_PER_FETCH)
-          .limit(limit)
-          .populate('author', 'username profile_image')
-          .populate('topic', 'name')
-          .sort({ date: -1 })
-          .exec();
+        queryOpts.push({ $match: { _id: { '$nin': userPosts}}});
       }
+
+      const posts = await Post.aggregate([
+        ...queryOpts,
+        { $sort: { date: -1 } },
+        { $limit: +limit },
+        { $skip: page * MAX_DOCS_PER_FETCH },
+        {
+          $lookup: {
+            from: User.collection.name,
+            localField: 'author',
+            foreignField: '_id',
+            pipeline: [{ $project: { username: 1, profile_image: 1 } }],
+            as: 'author',
+          },
+        },
+        { $unwind: '$author' },
+        {
+          $lookup: {
+            from: Topic.collection.name,
+            localField: 'topic',
+            foreignField: '_id',
+            pipeline: [{ $project: { name: 1 } }],
+            as: 'topic',
+          },
+        },
+        { $unwind: '$topic' },
+      ])
+        .project('author title body date topic like_count thumbnail_image')
+        .exec();
 
       res.json(posts);
     }
