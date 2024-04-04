@@ -28,31 +28,36 @@ exports.posts_get = [
   generalResourceQueries(MAX_DOCS_PER_FETCH),
   query('topic', 'Topic must be valid')
     .optional()
+    .default('')
     .trim()
     .escape()
     .customSanitizer(topicNameQuerySanitizer(Topic)),
-  query('ignoreid').optional().default('').trim().escape(),
+  query('ignoreList').optional().default('').trim().escape(),
+  query('followList').optional().default('').trim().escape(),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
       res.status(400).json({ message: 'Validation error', errors: errors.array() });
     } else {
-      const { page, limit, topic, userid, random, ignoreid } = req.query;
+      const { page, limit, topic, userid, random, ignoreList, followList } = req.query;
 
       const queryOpts = [];
 
-      if (topic) queryOpts.push({ $match: { topic: topic } });
-      if (userid) queryOpts.push({ $match: { author: userid } });
       if (random) queryOpts.push({ $sample: { size: +random } });
-      if (ignoreid) {
-        const ignoredUser = await User.findById(ignoreid).exec();
-        const userPosts = ignoredUser.user_posts;
+      if (userid) queryOpts.push({ $match: { author: userid } });
+      if (topic) queryOpts.push({ $match: { topic: new mongoose.Types.ObjectId(topic) } });
+      if (ignoreList) {
+        const currentUser = await User.findById(ignoreList).exec();
+        const allIgnoredUsers = currentUser.ignored_users;
 
-        // FIXME: remove comment
-        console.log(userPosts);
+        queryOpts.push({ $match: { author: { $nin: allIgnoredUsers } } });
+      }
+      if (followList) {
+        const currentUser = await User.findById(followList).exec();
+        const allFollowedUsers = currentUser.followed_users;
 
-        queryOpts.push({ $match: { _id: { '$nin': userPosts}}});
+        queryOpts.push({ $match: { author: { $in: allFollowedUsers } } });
       }
 
       const posts = await Post.aggregate([
