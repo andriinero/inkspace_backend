@@ -2,6 +2,13 @@
   "extends": [
     "eslint:recommended"
   ],
+  "parserOptions": {
+    "ecmaVersion": "latest"
+  },
+  "env": {
+    "es6": true,
+    "node": true
+  },
   "rules": {
     "max-len": [
       "warn",
@@ -23,15 +30,6 @@
     "quotes": [
       "warn",
       "single"
-    ],
-    "node/no-process-env": 1,
-    "node/no-unsupported-features/es-syntax": [
-      "error",
-      {
-        "ignores": [
-          "modules"
-        ]
-      }
     ],
     "node/no-missing-import": 0,
     "node/no-unpublished-import": 0
