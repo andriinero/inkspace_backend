@@ -28,14 +28,14 @@ exports.authors_get = [
     } else {
       const { limit, page, random } = req.query;
 
-      const stages = [];
+      const queryOpts = [];
 
-      if (random) stages.push({ $sample: { size: +random } });
+      if (limit && limit > 0) queryOpts.push({ $limit: limit });
+      if (random) queryOpts.push({ $sample: { size: +random } });
 
       const allAuthors = await User.aggregate([
-        ...stages,
+        ...queryOpts,
         { $skip: page * MAX_DOCS_PER_FETCH },
-        { $limit: +limit },
         { $sort: { sign_up_date: -1 } },
         { $set: { followed_users_count: { $size: '$followed_users' } } },
         { $set: { users_following_count: { $size: '$users_following' } } },

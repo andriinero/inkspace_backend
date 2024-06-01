@@ -4,6 +4,7 @@ const asyncHandler = require('express-async-handler');
 const { body, param, query, validationResult } = require('express-validator');
 const { GridFSBucket } = require('mongodb');
 const EnvVars = require('../constants/EnvVars');
+const { upload } = require('../middlewares/imageUpload');
 
 const {
   topicNameQuerySanitizer,
@@ -15,7 +16,6 @@ const { generalResourceQueries } = require('../middlewares/queryValidators');
 const Post = require('../models/post');
 const User = require('../models/user');
 const Topic = require('../models/topic');
-const { upload } = require('../middlewares/imageUpload');
 
 const gridFSBucket = new GridFSBucket(mongoose.connection, {
   bucketName: 'images',
@@ -46,6 +46,7 @@ exports.posts_get = [
 
       const queryOpts = [];
 
+      if (limit && limit > 0) queryOpts.push({ $limit: limit });
       if (random) queryOpts.push({ $sample: { size: +random } });
       if (userid) queryOpts.push({ $match: { author: userid } });
       if (topic)
@@ -68,7 +69,6 @@ exports.posts_get = [
       const posts = await Post.aggregate([
         ...queryOpts,
         { $sort: { date: -1 } },
-        { $limit: +limit },
         { $skip: page * MAX_DOCS_PER_FETCH },
         {
           $lookup: {
