@@ -1,9 +1,7 @@
 #! /usr/bin/env node
 
-require('dotenv').config();
-
 const bcrypt = require('bcryptjs');
-const userArgs = process.argv.slice(2);
+const EnvVars = require('./constants/EnvVars');
 
 const User = require('./models/user');
 const Post = require('./models/post');
@@ -18,7 +16,7 @@ const topics = [];
 const mongoose = require('mongoose');
 mongoose.set('strictQuery', false);
 
-const mongoDB = process.env.DEV_MONGODB_URI;
+const mongoDB = EnvVars.MongoDB.URI;
 
 main().catch((err) => console.log(err));
 
@@ -34,8 +32,15 @@ async function main() {
   mongoose.connection.close();
 }
 
-async function userCreate(index, username, password, email, role, bio = undefined) {
-  const hashedPassword = await bcrypt.hash(password, +process.env.SALT_VALUE);
+async function userCreate(
+  index,
+  username,
+  password,
+  email,
+  role,
+  bio = undefined,
+) {
+  const hashedPassword = await bcrypt.hash(password, EnvVars.Bcrypt.SALT);
 
   const userDetail = { username, password: hashedPassword, email, role, bio };
 
@@ -105,7 +110,7 @@ async function createUsers() {
       'strongpass1',
       'example1@gmail.com',
       'user',
-      'Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et.'
+      'Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et.',
     ),
     userCreate(
       1,
@@ -113,7 +118,7 @@ async function createUsers() {
       'strongpass1',
       'example2@gmail.com',
       'user',
-      'Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et.'
+      'Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et.',
     ),
     userCreate(
       2,
@@ -121,7 +126,7 @@ async function createUsers() {
       'strongpass1',
       'example3@gmail.com',
       'user',
-      'Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et.'
+      'Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et.',
     ),
   ]);
 }
@@ -139,35 +144,35 @@ async function createPosts() {
       users[0],
       'First post title',
       'Sentence officer go lay individual leather zoo had selection along while fix speed spring loss solid affect stomach outer two listen joined met eventually',
-      topics[0]
+      topics[0],
     ),
     postCreate(
       1,
       users[1],
       'Second post title',
       'Hardly sweet yet stone local flight save day carry pony outer hollow log myself brave fort fine poetry wear pound massage plain girl good',
-      topics[1]
+      topics[1],
     ),
     postCreate(
       2,
       users[1],
       'Third post title',
       'Every circus unusual rocky corn hour hungry cutting increase mission greatly source perfectly broke now band sand save dance firm ten avoid curious underline',
-      topics[1]
+      topics[1],
     ),
     postCreate(
       3,
       users[2],
       'Fourth post title',
       'Specific nodded lying whether egg harbor although lost pile push pond city please equal among beyond voyage pilot floor character person studying vapor properly',
-      topics[0]
+      topics[0],
     ),
     postCreate(
       4,
       users[2],
       'Fifth post title',
       'Noted getting object has aside nobody court magic needs golden bee using look opportunity storm balance realize immediately dirty due below suggest lie foreign',
-      topics[0]
+      topics[0],
     ),
   ]);
 }
@@ -180,21 +185,21 @@ async function createComments() {
       users[0],
       posts[0],
       "That's a crazy post",
-      'western wall stick crack rubber serve prove two volume nearly noted swept scene railroad aboard at share impossible have future method alike fastened ready'
+      'western wall stick crack rubber serve prove two volume nearly noted swept scene railroad aboard at share impossible have future method alike fastened ready',
     ),
     commentCreate(
       1,
       users[0],
       posts[0],
       'You are doing a great job',
-      'sister slide bear now pleasure daily itself unusual test hand waste prize palace silk situation went further bell forgotten keep alone white they chose'
+      'sister slide bear now pleasure daily itself unusual test hand waste prize palace silk situation went further bell forgotten keep alone white they chose',
     ),
     commentCreate(
       2,
       users[1],
       posts[1],
       'Keep up the work',
-      'grandmother able might next met supply greatest common fine than rich carry ice complex may industry food folks think moving once solar air volume'
+      'grandmother able might next met supply greatest common fine than rich carry ice complex may industry food folks think moving once solar air volume',
     ),
   ]);
 }

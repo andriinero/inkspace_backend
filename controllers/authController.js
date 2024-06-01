@@ -3,8 +3,7 @@ const { body, validationResult } = require('express-validator');
 const passport = require('passport');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-
-require('dotenv').config();
+const EnvVars = require('../constants/EnvVars');
 
 const User = require('../models/user');
 
@@ -28,20 +27,27 @@ exports.login_post = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ message: 'Validation error', errors: errors.array() });
+      res
+        .status(400)
+        .json({ message: 'Validation error', errors: errors.array() });
     } else {
-      const userByUsername = await User.findOne({ username: req.body.username }).exec();
+      const userByUsername = await User.findOne({
+        username: req.body.username,
+      }).exec();
 
       if (!userByUsername) {
         res.status(401).json({ message: 'Incorrect credentials' });
       } else {
-        const match = await bcrypt.compare(req.body.password, userByUsername.password);
+        const match = await bcrypt.compare(
+          req.body.password,
+          userByUsername.password,
+        );
 
         if (!match) {
           res.status(401).json({ message: 'Incorrect credentials' });
         } else {
           const opts = { expiresIn: '1d' };
-          const SECRET_KEY = process.env.SECRET_KEY;
+          const SECRET_KEY = EnvVars.Jwt.SECRET;
           const jwtPayload = {
             sub: userByUsername._id,
             username: userByUsername.username,
@@ -95,9 +101,11 @@ exports.signup_post = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ message: 'Validation error', errors: errors.array() });
+      res
+        .status(400)
+        .json({ message: 'Validation error', errors: errors.array() });
     } else {
-      const SALT_VALUE = +process.env.SALT_VALUE;
+      const SALT_VALUE = EnvVars.Bcrypt.SALT;
       const hashedPassword = await bcrypt.hash(req.body.password, SALT_VALUE);
 
       const userDetail = {

@@ -1,6 +1,7 @@
 const passport = require('passport');
 const asyncHandler = require('express-async-handler');
 const { body, param, validationResult } = require('express-validator');
+const EnvVars = require('../constants/EnvVars');
 
 const { isDbIdValid } = require('../middlewares/validation');
 const { generalResourceQueries } = require('../middlewares/queryValidators');
@@ -8,9 +9,7 @@ const { generalResourceQueries } = require('../middlewares/queryValidators');
 const Comment = require('../models/comment');
 const Post = require('../models/post');
 
-require('dotenv').config();
-
-const MAX_DOCS_PER_FETCH = parseInt(process.env.MAX_DOCS_PER_FETCH, 10);
+const MAX_DOCS_PER_FETCH = EnvVars.Bandwidth.MAX_DOCS_PER_FETCH;
 
 exports.comments_get = [
   param('postid', 'Post id must be valid').trim().custom(isDbIdValid).escape(),
@@ -19,13 +18,15 @@ exports.comments_get = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ message: 'Validation error', errors: errors.array() });
+      res
+        .status(400)
+        .json({ message: 'Validation error', errors: errors.array() });
     } else {
       const { limit, page } = req.query;
 
       const allCommentsByPost = await Comment.find(
         { post: req.params.postid },
-        'author post body date edit_date'
+        'author post body date edit_date',
       )
         .skip(page * MAX_DOCS_PER_FETCH)
         .limit(limit)
@@ -43,16 +44,21 @@ exports.comments_get = [
 ];
 
 exports.comment_get = [
-  param('commentid', 'Comment id must be valid').trim().custom(isDbIdValid).escape(),
+  param('commentid', 'Comment id must be valid')
+    .trim()
+    .custom(isDbIdValid)
+    .escape(),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ message: 'Validation error', errors: errors.array() });
+      res
+        .status(400)
+        .json({ message: 'Validation error', errors: errors.array() });
     } else {
       const comment = await Comment.findById(
         req.params.commentid,
-        'author post body date edit_date'
+        'author post body date edit_date',
       )
         .populate('author', 'username profile_image')
         .exec();
@@ -76,7 +82,9 @@ exports.comment_post = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ message: 'Validation error', errors: errors.array() });
+      res
+        .status(400)
+        .json({ message: 'Validation error', errors: errors.array() });
     } else {
       const post = await Post.findById(req.params.postid).exec();
 
@@ -105,7 +113,10 @@ exports.comment_post = [
 
 exports.comment_put = [
   passport.authenticate('jwt', { session: false }),
-  param('commentid', 'Comment id must be valid').trim().custom(isDbIdValid).escape(),
+  param('commentid', 'Comment id must be valid')
+    .trim()
+    .custom(isDbIdValid)
+    .escape(),
   body('body', 'Comment body must have correct length')
     .optional()
     .trim()
@@ -114,7 +125,9 @@ exports.comment_put = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ message: 'Validation error', errors: errors.array() });
+      res
+        .status(400)
+        .json({ message: 'Validation error', errors: errors.array() });
     } else {
       const commentById = await Comment.findById(req.params.commentid).exec();
 
@@ -132,7 +145,7 @@ exports.comment_put = [
           const updatedComment = await Comment.findByIdAndUpdate(
             req.params.commentid,
             commentDetail,
-            { new: true, runValidators: true }
+            { new: true, runValidators: true },
           )
             .select('author post body date edit_date')
             .populate('author', 'username profile_image');
@@ -146,12 +159,17 @@ exports.comment_put = [
 
 exports.comment_delete = [
   passport.authenticate('jwt', { session: false }),
-  param('commentid', 'Comment id must be valid').trim().custom(isDbIdValid).escape(),
+  param('commentid', 'Comment id must be valid')
+    .trim()
+    .custom(isDbIdValid)
+    .escape(),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ message: 'Validation error', errors: errors.array() });
+      res
+        .status(400)
+        .json({ message: 'Validation error', errors: errors.array() });
     } else {
       const commentById = await Comment.findById(req.params.commentid).exec();
       const postById = await Post.findById(commentById.post).exec();
@@ -166,7 +184,7 @@ exports.comment_delete = [
 
           if (result.acknowledged) {
             postById.comments = postById.comments.filter(
-              (c) => !c.equals(commentById._id)
+              (c) => !c.equals(commentById._id),
             );
             await postById.save();
           }

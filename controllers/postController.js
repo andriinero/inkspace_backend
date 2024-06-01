@@ -3,6 +3,7 @@ const passport = require('passport');
 const asyncHandler = require('express-async-handler');
 const { body, param, query, validationResult } = require('express-validator');
 const { GridFSBucket } = require('mongodb');
+const EnvVars = require('../constants/EnvVars');
 
 const {
   topicNameQuerySanitizer,
@@ -20,9 +21,7 @@ const gridFSBucket = new GridFSBucket(mongoose.connection, {
   bucketName: 'images',
 });
 
-require('dotenv').config();
-
-const MAX_DOCS_PER_FETCH = parseInt(process.env.MAX_DOCS_PER_FETCH, 10);
+const MAX_DOCS_PER_FETCH = parseInt(EnvVars.Bandwidth.MAX_DOCS_PER_FETCH, 10);
 
 exports.posts_get = [
   generalResourceQueries(MAX_DOCS_PER_FETCH),
@@ -38,15 +37,21 @@ exports.posts_get = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ message: 'Validation error', errors: errors.array() });
+      res
+        .status(400)
+        .json({ message: 'Validation error', errors: errors.array() });
     } else {
-      const { page, limit, topic, userid, random, ignoreList, followList } = req.query;
+      const { page, limit, topic, userid, random, ignoreList, followList } =
+        req.query;
 
       const queryOpts = [];
 
       if (random) queryOpts.push({ $sample: { size: +random } });
       if (userid) queryOpts.push({ $match: { author: userid } });
-      if (topic) queryOpts.push({ $match: { topic: new mongoose.Types.ObjectId(topic) } });
+      if (topic)
+        queryOpts.push({
+          $match: { topic: new mongoose.Types.ObjectId(topic) },
+        });
       if (ignoreList) {
         const currentUser = await User.findById(ignoreList).exec();
         const allIgnoredUsers = currentUser.ignored_users;
@@ -100,11 +105,13 @@ exports.post_get = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ message: 'Validation error', errors: errors.array() });
+      res
+        .status(400)
+        .json({ message: 'Validation error', errors: errors.array() });
     } else {
       const post = await Post.findById(
         req.params.postid,
-        'author title body date topic like_count thumbnail_image'
+        'author title body date topic like_count thumbnail_image',
       )
         .populate('author', 'username profile_image')
         .populate({
@@ -130,16 +137,23 @@ exports.post_get = [
 exports.post_post = [
   passport.authenticate('jwt', { session: false }),
   upload.single('image'),
-  body('title', 'Title must have correct length').trim().isLength({ min: 3, max: 100 }),
+  body('title', 'Title must have correct length')
+    .trim()
+    .isLength({ min: 3, max: 100 }),
   body('body', 'Post body must have correct length')
     .trim()
     .isLength({ min: 100, max: 10000 }),
-  body('topic', 'Topic must be valid').trim().customSanitizer(topicSanitizer).escape(),
+  body('topic', 'Topic must be valid')
+    .trim()
+    .customSanitizer(topicSanitizer)
+    .escape(),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ message: 'Validation error', errors: errors.array() });
+      res
+        .status(400)
+        .json({ message: 'Validation error', errors: errors.array() });
     } else {
       const user = req.user;
       const thumbnailImageId = req.file.id;
@@ -185,7 +199,9 @@ exports.post_put = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ message: 'Validation error', errors: errors.array() });
+      res
+        .status(400)
+        .json({ message: 'Validation error', errors: errors.array() });
     } else {
       const postById = await Post.findById(req.params.postid).exec();
 
@@ -199,7 +215,9 @@ exports.post_put = [
           const thumbnailImageId = req.file.id;
 
           if (postThumbnailId && thumbnailImageId) {
-            await gridFSBucket.delete(new mongoose.Types.ObjectId(postThumbnailId));
+            await gridFSBucket.delete(
+              new mongoose.Types.ObjectId(postThumbnailId),
+            );
           }
 
           const postDetail = {
@@ -212,7 +230,7 @@ exports.post_put = [
           const updatedPost = await Post.findByIdAndUpdate(
             req.params.postid,
             postDetail,
-            { new: true, runValidators: true }
+            { new: true, runValidators: true },
           )
             .select('author title body date topic like_count thumbnail_image')
             .populate('author', 'username profile_image')
@@ -233,7 +251,9 @@ exports.post_delete = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ message: 'Validation error', errors: errors.array() });
+      res
+        .status(400)
+        .json({ message: 'Validation error', errors: errors.array() });
     } else {
       const postId = req.params.postid;
       const postById = await Post.findById(postId).exec();

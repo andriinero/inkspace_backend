@@ -1,16 +1,17 @@
 const passport = require('passport');
 const asyncHandler = require('express-async-handler');
 const { body, query, validationResult, param } = require('express-validator');
+const EnvVars = require('../constants/EnvVars');
 
 const { isDbIdValid } = require('../middlewares/validation');
 const { generalResourceQueries } = require('../middlewares/queryValidators');
 
 const Topic = require('../models/topic');
+// NOTE: loads user model
+// eslint-disable-next-line
 const User = require('../models/user');
 
-require('dotenv').config();
-
-const MAX_DOCS_PER_FETCH = parseInt(process.env.MAX_DOCS_PER_FETCH, 10);
+const MAX_DOCS_PER_FETCH = EnvVars.Bandwidth.MAX_DOCS_PER_FETCH;
 
 exports.topics_get = [
   generalResourceQueries(MAX_DOCS_PER_FETCH),
@@ -23,7 +24,9 @@ exports.topics_get = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.send(400).json({ message: 'Validation error', errors: errors.array() });
+      res
+        .send(400)
+        .json({ message: 'Validation error', errors: errors.array() });
     } else {
       const { limit, page, random } = req.query;
 
@@ -44,12 +47,17 @@ exports.topics_get = [
 ];
 
 exports.topic_get = [
-  param('topicid', 'Topic id must be valid').trim().custom(isDbIdValid).escape(),
+  param('topicid', 'Topic id must be valid')
+    .trim()
+    .custom(isDbIdValid)
+    .escape(),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ message: 'Validation error', errors: errors.array() });
+      res
+        .status(400)
+        .json({ message: 'Validation error', errors: errors.array() });
     } else {
       const topicById = await Topic.findById(req.params.topicid).exec();
 
@@ -72,7 +80,9 @@ exports.topic_post = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ message: 'Validation error', errors: errors.array() });
+      res
+        .status(400)
+        .json({ message: 'Validation error', errors: errors.array() });
     } else {
       const topicDetail = { name: req.body.name };
 
@@ -86,7 +96,10 @@ exports.topic_post = [
 
 exports.topic_put = [
   passport.authenticate('jwt', { session: false }),
-  param('topicid', 'Topic id must have valid format').trim().custom(isDbIdValid).escape(),
+  param('topicid', 'Topic id must have valid format')
+    .trim()
+    .custom(isDbIdValid)
+    .escape(),
   body('name', 'Name must have valid format')
     .trim()
     .isLength({ min: 3, max: 100 })
@@ -95,7 +108,9 @@ exports.topic_put = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ message: 'Validation error', errors: errors.array() });
+      res
+        .status(400)
+        .json({ message: 'Validation error', errors: errors.array() });
     } else {
       const topicDetail = { name: req.body.name };
 
@@ -105,7 +120,7 @@ exports.topic_put = [
         {
           new: true,
           runValidators: true,
-        }
+        },
       )
         .select('name')
         .exec();
@@ -121,14 +136,21 @@ exports.topic_put = [
 
 exports.topic_delete = [
   passport.authenticate('jwt', { session: false }),
-  param('topicid', 'Topic id must have valid format').trim().custom(isDbIdValid).escape(),
+  param('topicid', 'Topic id must have valid format')
+    .trim()
+    .custom(isDbIdValid)
+    .escape(),
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ message: 'Validation error', errors: errors.array() });
+      res
+        .status(400)
+        .json({ message: 'Validation error', errors: errors.array() });
     } else {
-      const deletedTopic = await Topic.findByIdAndDelete(req.params.topicid).exec();
+      const deletedTopic = await Topic.findByIdAndDelete(
+        req.params.topicid,
+      ).exec();
 
       if (!deletedTopic) {
         res.status(404).json({ message: 'Topic not found' });

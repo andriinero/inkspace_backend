@@ -6,6 +6,7 @@ const { GridFSBucket } = require('mongodb');
 const bcrypt = require('bcryptjs');
 const { upload } = require('../middlewares/imageUpload');
 const { updateUserList } = require('../utils/userUtils');
+const EnvVars = require('../constants/EnvVars');
 
 const User = require('../models/user');
 const Post = require('../models/post');
@@ -18,9 +19,7 @@ const gridFSBucket = new GridFSBucket(mongoose.connection, {
   bucketName: 'images',
 });
 
-require('dotenv').config();
-
-const MAX_DOCS_PER_FETCH = parseInt(process.env.MAX_DOCS_PER_FETCH, 10);
+const MAX_DOCS_PER_FETCH = parseInt(EnvVars.Bandwidth.MAX_DOCS_PER_FETCH, 10);
 
 exports.profile_get = [
   passport.authenticate('jwt', { session: false }),
@@ -44,7 +43,9 @@ exports.profile_put = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).send({ message: 'Validation error', errors: errors.array() });
+      res
+        .status(400)
+        .send({ message: 'Validation error', errors: errors.array() });
     } else {
       const profileDetails = {
         username: req.body.username,
@@ -52,10 +53,14 @@ exports.profile_put = [
         bio: req.body.bio,
       };
 
-      const updatedProfile = await User.findByIdAndUpdate(req.user._id, profileDetails, {
-        new: true,
-        runValidators: true,
-      })
+      const updatedProfile = await User.findByIdAndUpdate(
+        req.user._id,
+        profileDetails,
+        {
+          new: true,
+          runValidators: true,
+        },
+      )
         .select('username email bio')
         .exec();
 
@@ -75,7 +80,9 @@ exports.profile_delete = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.json(400).json({ message: 'Validation error', errors: errors.array() });
+      res
+        .json(400)
+        .json({ message: 'Validation error', errors: errors.array() });
     } else {
       const userId = req.params.userid;
 
@@ -98,8 +105,16 @@ exports.profile_delete = [
             ignored_users: userId,
           }).exec();
 
-          updateUserList(allUsersByFollowedUsers, 'followed_users', userById.id);
-          updateUserList(allUsersByUsersFollowing, 'users_following', userById.id);
+          updateUserList(
+            allUsersByFollowedUsers,
+            'followed_users',
+            userById.id,
+          );
+          updateUserList(
+            allUsersByUsersFollowing,
+            'users_following',
+            userById.id,
+          );
           updateUserList(allUsersByIgnoredUsers, 'ignored_users', userById.id);
 
           await userById.deleteOne();
@@ -126,9 +141,11 @@ exports.password_put = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).send({ message: 'Validation error', errors: errors.array() });
+      res
+        .status(400)
+        .send({ message: 'Validation error', errors: errors.array() });
     } else {
-      const SALT_VALUE = +process.env.SALT_VALUE;
+      const SALT_VALUE = EnvVars.Bcrypt.SALT;
       const password = await bcrypt.hash(req.body.password, SALT_VALUE);
 
       const updatedProfile = await User.findByIdAndUpdate(
@@ -137,7 +154,7 @@ exports.password_put = [
         {
           new: true,
           runValidators: true,
-        }
+        },
       ).exec();
 
       if (!updatedProfile) {
@@ -187,7 +204,9 @@ exports.bookmarks_get = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ message: 'Validation error', errors: errors.array() });
+      res
+        .status(400)
+        .json({ message: 'Validation error', errors: errors.array() });
     } else {
       const { limit, page } = req.query;
 
@@ -236,7 +255,9 @@ exports.bookmark_post = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).send({ message: 'Validation error', errors: errors.array() });
+      res
+        .status(400)
+        .send({ message: 'Validation error', errors: errors.array() });
     } else {
       const userById = await User.findById(req.user._id).exec();
 
@@ -273,7 +294,9 @@ exports.bookmark_delete = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).send({ message: 'Validation error', errors: errors.array() });
+      res
+        .status(400)
+        .send({ message: 'Validation error', errors: errors.array() });
     } else {
       const userById = await User.findById(req.user._id).exec();
 
@@ -281,7 +304,7 @@ exports.bookmark_delete = [
         res.status(404).json({ message: 'User not found' });
       } else {
         const index = userById.post_bookmarks.findIndex(
-          (p) => p._id.toString() === req.params.postid
+          (p) => p._id.toString() === req.params.postid,
         );
         const removedBookmark = userById.post_bookmarks.splice(index, 1)[0];
 
@@ -304,7 +327,9 @@ exports.ignored_posts_get = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ message: 'Validation error', errors: errors.array() });
+      res
+        .status(400)
+        .json({ message: 'Validation error', errors: errors.array() });
     } else {
       const { limit, page } = req.query;
 
@@ -349,7 +374,9 @@ exports.ignored_post_post = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).send({ message: 'Validation error', errors: errors.array() });
+      res
+        .status(400)
+        .send({ message: 'Validation error', errors: errors.array() });
     } else {
       const userById = await User.findById(req.user._id).exec();
 
@@ -386,7 +413,9 @@ exports.ignored_post_delete = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).send({ message: 'Validation error', errors: errors.array() });
+      res
+        .status(400)
+        .send({ message: 'Validation error', errors: errors.array() });
     } else {
       const userById = await User.findById(req.user._id).exec();
 
@@ -394,7 +423,7 @@ exports.ignored_post_delete = [
         res.status(404).json({ message: 'User not found' });
       } else {
         const index = userById.ignored_posts.findIndex(
-          (p) => p._id.toString() === req.params.postid
+          (p) => p._id.toString() === req.params.postid,
         );
         const removedIgnoredPost = userById.ignored_posts.splice(index, 1)[0];
 
@@ -417,7 +446,9 @@ exports.ignored_users_get = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ message: 'Validation error', errors: errors.array() });
+      res
+        .status(400)
+        .json({ message: 'Validation error', errors: errors.array() });
     } else {
       const { limit, page } = req.query;
 
@@ -462,7 +493,9 @@ exports.ignored_user_post = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).send({ message: 'Validation error', errors: errors.array() });
+      res
+        .status(400)
+        .send({ message: 'Validation error', errors: errors.array() });
     } else {
       const userById = await User.findById(req.user._id).exec();
 
@@ -499,7 +532,9 @@ exports.ignored_user_delete = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).send({ message: 'Validation error', errors: errors.array() });
+      res
+        .status(400)
+        .send({ message: 'Validation error', errors: errors.array() });
     } else {
       const userById = await User.findById(req.user._id).exec();
 
@@ -507,7 +542,7 @@ exports.ignored_user_delete = [
         res.status(404).json({ message: 'User not found' });
       } else {
         const index = userById.ignored_users.findIndex(
-          (p) => p._id.toString() === req.params.userid
+          (p) => p._id.toString() === req.params.userid,
         );
         const removedIgnoredUser = userById.ignored_users.splice(index, 1)[0];
 
@@ -530,7 +565,9 @@ exports.ignored_topics_get = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ message: 'Validation error', errors: errors.array() });
+      res
+        .status(400)
+        .json({ message: 'Validation error', errors: errors.array() });
     } else {
       const { limit, page } = req.query;
 
@@ -575,7 +612,9 @@ exports.ignored_topic_post = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).send({ message: 'Validation error', errors: errors.array() });
+      res
+        .status(400)
+        .send({ message: 'Validation error', errors: errors.array() });
     } else {
       const userById = await User.findById(req.user._id).exec();
 
@@ -612,7 +651,9 @@ exports.ignored_topic_delete = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).send({ message: 'Validation error', errors: errors.array() });
+      res
+        .status(400)
+        .send({ message: 'Validation error', errors: errors.array() });
     } else {
       const userById = await User.findById(req.user._id).exec();
 
@@ -620,7 +661,7 @@ exports.ignored_topic_delete = [
         res.status(404).json({ message: 'User not found' });
       } else {
         const index = userById.ignored_topics.findIndex(
-          (p) => p._id.toString() === req.params.topicid
+          (p) => p._id.toString() === req.params.topicid,
         );
         const removedIgnoredTopic = userById.ignored_topics.splice(index, 1)[0];
 
@@ -643,7 +684,9 @@ exports.followed_users_get = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ message: 'Validation error', errors: errors.array() });
+      res
+        .status(400)
+        .json({ message: 'Validation error', errors: errors.array() });
     } else {
       const { limit, page } = req.query;
 
@@ -688,7 +731,9 @@ exports.followed_user_post = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).send({ message: 'Validation error', errors: errors.array() });
+      res
+        .status(400)
+        .send({ message: 'Validation error', errors: errors.array() });
     } else {
       const currentUser = req.user;
       const userById = await User.findById(req.body.userid).exec();
@@ -729,7 +774,9 @@ exports.followed_user_delete = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).send({ message: 'Validation error', errors: errors.array() });
+      res
+        .status(400)
+        .send({ message: 'Validation error', errors: errors.array() });
     } else {
       const currentUser = req.user;
       const userById = await User.findById(req.params.userid).exec();
@@ -738,12 +785,15 @@ exports.followed_user_delete = [
         res.status(404).json({ message: 'User not found' });
       } else {
         const indexFollowed = currentUser.followed_users.findIndex(
-          (u) => u._id.toString() === req.params.userid
+          (u) => u._id.toString() === req.params.userid,
         );
-        const unfollowedUser = currentUser.followed_users.splice(indexFollowed, 1)[0];
+        const unfollowedUser = currentUser.followed_users.splice(
+          indexFollowed,
+          1,
+        )[0];
 
         const indexFollowing = userById.users_following.findIndex(
-          (u) => u._id.toString() === currentUser._id
+          (u) => u._id.toString() === currentUser._id,
         );
         userById.users_following.splice(indexFollowing, 1)[0];
 
@@ -767,7 +817,9 @@ exports.users_following_get = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ message: 'Validation error', errors: errors.array() });
+      res
+        .status(400)
+        .json({ message: 'Validation error', errors: errors.array() });
     } else {
       const { limit, page } = req.query;
 

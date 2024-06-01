@@ -2,15 +2,14 @@ const asyncHandler = require('express-async-handler');
 const { query, param, validationResult } = require('express-validator');
 const mongoose = require('mongoose');
 const ObjectId = mongoose.Types.ObjectId;
+const EnvVars = require('../constants/EnvVars');
 
 const { isDbIdValid } = require('../middlewares/validation');
 const { generalResourceQueries } = require('../middlewares/queryValidators');
 
 const User = require('../models/user');
 
-require('dotenv').config();
-
-const MAX_DOCS_PER_FETCH = parseInt(process.env.MAX_DOCS_PER_FETCH, 10);
+const MAX_DOCS_PER_FETCH = EnvVars.Bandwidth.MAX_DOCS_PER_FETCH;
 
 exports.authors_get = [
   generalResourceQueries(MAX_DOCS_PER_FETCH),
@@ -23,7 +22,9 @@ exports.authors_get = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ message: 'Validation error', error: errors.array() });
+      res
+        .status(400)
+        .json({ message: 'Validation error', error: errors.array() });
     } else {
       const { limit, page, random } = req.query;
 
@@ -40,7 +41,7 @@ exports.authors_get = [
         { $set: { users_following_count: { $size: '$users_following' } } },
       ])
         .project(
-          'username bio followed_users_count users_following_count sign_up_date profile_image'
+          'username bio followed_users_count users_following_count sign_up_date profile_image',
         )
         .exec();
 
@@ -55,7 +56,9 @@ exports.author_get = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({ message: 'Validation error', errors: errors.array() });
+      res
+        .status(400)
+        .json({ message: 'Validation error', errors: errors.array() });
     } else {
       const authorById = await User.aggregate([
         { $match: { _id: ObjectId(req.params.userid) } },
@@ -63,7 +66,7 @@ exports.author_get = [
         { $set: { users_following_count: { $size: '$users_following' } } },
       ])
         .project(
-          'username bio followed_users_count users_following_count sign_up_date profile_image'
+          'username bio followed_users_count users_following_count sign_up_date profile_image',
         )
         .exec();
 

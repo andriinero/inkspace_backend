@@ -10,14 +10,13 @@ const ExtractJWT = require('passport-jwt').ExtractJwt;
 const compression = require('compression');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-
-require('dotenv').config();
+const EnvVars = require('./constants/EnvVars');
 
 const User = require('./models/user');
 
 const strategyOpts = {
   jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken(),
-  secretOrKey: process.env.SECRET_KEY,
+  secretOrKey: EnvVars.Jwt.SECRET,
 };
 
 const indexRouter = require('./routes/index');
@@ -31,7 +30,7 @@ const imageRouter = require('./routes/imageRouter');
 
 const app = express();
 
-const mongoDB = process.env.DEV_MONGODB_URI;
+const mongoDB = EnvVars.MongoDB.URI;
 mongoose.set('strictQuery', false);
 const main = async () => {
   await mongoose.connect(mongoDB);
