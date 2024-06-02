@@ -2,8 +2,9 @@ require('dotenv').config();
 
 module.exports = Object.freeze({
   NodeEnv: process.env.NODE_ENV ?? '',
+  HOSTNAME: process.env.HOSTNAME ?? 'localhost',
   Port: {
-    BASE: process.env.PORT_BASE ?? 0,
+    BASE: parseInt(process.env.PORT ?? 3000),
   },
   MongoDB: {
     URI: process.env.MONGODB_URI ?? '',
@@ -16,6 +17,6 @@ module.exports = Object.freeze({
     SALT: parseInt(process.env.BCRYPT_SALT_VALUE),
   },
   Bandwidth: {
-    MAX_DOCS_PER_FETCH: process.env.MAX_DOCS_PER_FETCH ?? 25,
+    MAX_DOCS_PER_FETCH: parseInt(process.env.MAX_DOCS_PER_FETCH ?? 25),
   },
 });
