@@ -8,7 +8,7 @@
   <p align="center">
     REST API web server written in JavaScript utilizing Express.js and MongoDB
     <br />
-    <a href="https://inkspace-alpha.vercel.app">View Demo</a>
+    <a href="https://inkspace-an.vercel.app">View Demo</a>
     ·
     <a href="https://github.com/andriinero/inkspace">Frontend</a>
     ·
